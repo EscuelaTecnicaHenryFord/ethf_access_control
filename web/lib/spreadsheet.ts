@@ -5,7 +5,7 @@ import { Awaitable } from 'next-auth'
 async function _getAuth() {
     const auth = await google.auth.getClient({
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        keyFile: 'service-account.json'
+        keyFile: 'service-account.json',
     })
     return auth
 }
