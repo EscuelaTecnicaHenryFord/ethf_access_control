@@ -1,5 +1,5 @@
-import 'dart:math';
-
+import 'package:ethf_access_control_app/api/api.dart';
+import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/material.dart';
 
@@ -18,118 +18,73 @@ class PersonInfoCard extends StatefulWidget {
 }
 
 class _PersonInfoCardState extends State<PersonInfoCard> {
-  bool? isRegistered;
+  RemotePerson? remotePerson;
+  RemotePerson? invitedBy;
 
   @override
   void initState() {
-    final random = Random();
+    fetchData();
     super.initState();
-    Future.delayed(const Duration(seconds: 2)).then((value) {
-      if (!context.mounted) return;
-      setState(() {
-        isRegistered = random.nextDouble() >= 0.5;
-      });
+  }
+
+  void fetchData() async {
+    final remotePerson = await fetchIdentity(widget.personInfo.cuil);
+    final invitedBy = remotePerson != null ? await fetchIdentity(remotePerson.invitedBy!) : null;
+
+    if (!context.mounted) return;
+
+    setState(() {
+      this.remotePerson = remotePerson;
+      this.invitedBy = invitedBy;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: isRegistered == null
-          ? null
-          : isRegistered!
-              ? Colors.green
-              : Colors.red,
-      child: SizedBox(
-        height: PersonInfoCard.height,
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 30,
-              child: Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: Icon(Icons.badge_outlined, size: 32),
-                  ),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.personInfo.displayName,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        Text(
-                          widget.personInfo.cuil,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isRegistered == true)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: IconButton(
-                        icon: const Icon(Icons.done, size: 32),
-                        onPressed: () {},
-                      ),
-                    ),
-                  if (isRegistered == false)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 26),
-                      child: IconButton(
-                        icon: const Icon(Icons.person_add, size: 32),
-                        onPressed: () {},
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SizedBox(
-                height: 50,
-                child: InkWell(
-                  onTap: () {},
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isRegistered == null)
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: CircularProgressIndicator(),
-                        ),
-                      if (isRegistered == true)
-                        Icon(Icons.info_outline, size: 16),
-                      if (isRegistered == false) Icon(Icons.error, size: 16),
-                      SizedBox(width: 6),
-                      if (isRegistered == true)
-                        Text(
-                          "Invitado de HF1710 (Tomás Cichero)",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      if (isRegistered == false)
-                        Text(
-                          "La persona no está en la lista de invitados",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
-                        )
-                    ],
-                  ),
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      height: 270,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+                child: Text(
+                  widget.personInfo.displayName,
+                  style: theme.textTheme.headlineSmall,
                 ),
               ),
+              if (invitedBy != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Text(
+                    "Invitado por ${invitedBy!.name} (${invitedBy!.id})",
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+            ],
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: NavigationBar(
+              onDestinationSelected: (index) {
+                if (index == 0) {
+                  Navigator.of(context).pop();
+                }
+              },
+              selectedIndex: 1,
+              destinations: const [
+                NavigationDestination(icon: Icon(Icons.cancel), label: 'Cancelar'),
+                NavigationDestination(icon: Icon(Icons.done), label: 'Registrar ingreso'),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
