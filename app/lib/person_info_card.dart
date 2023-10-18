@@ -41,6 +41,10 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     });
   }
 
+  void handleRegisterAttendance() async {}
+
+  void handleRegisterNewPerson() async {}
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -85,6 +89,10 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
               onDestinationSelected: (index) {
                 if (index == 0) {
                   Navigator.of(context).pop();
+                } else if (index == 1 && !loading && remotePerson != null) {
+                  handleRegisterAttendance();
+                } else if (index == 1 && !loading && remotePerson == null) {
+                  handleRegisterNewPerson();
                 }
               },
               selectedIndex: 1,
