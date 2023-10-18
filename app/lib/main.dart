@@ -1,11 +1,10 @@
-import 'package:ethf_access_control_app/person_info.dart';
-import 'package:ethf_access_control_app/person_info_card.dart';
-import 'package:ethf_access_control_app/scanner.dart';
+import 'package:ethf_access_control_app/auth_wrapper.dart';
 import 'package:ethf_access_control_app/scanner_view.dart';
 import 'package:ethf_access_control_app/theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -18,7 +17,9 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: appThemeData,
       darkTheme: appDarkThemeData,
-      home: const ScanPage(title: 'ETHF Control de Acceso'),
+      home: const AuthWrapper(
+        child: ScanPage(title: 'ETHF Control de Acceso'),
+      ),
     );
   }
 }
