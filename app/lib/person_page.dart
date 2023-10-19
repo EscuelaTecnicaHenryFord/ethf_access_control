@@ -1,7 +1,13 @@
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:flutter/material.dart';
 
-void showPersonPage(RemotePerson person) {}
+void showPersonPage(BuildContext context, RemotePerson person) {
+  Navigator.of(context).push(MaterialPageRoute(
+    builder: (context) {
+      return PersonPage(person: person);
+    },
+  ));
+}
 
 class PersonPage extends StatefulWidget {
   const PersonPage({

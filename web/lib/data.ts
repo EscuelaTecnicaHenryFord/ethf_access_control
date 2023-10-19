@@ -1,5 +1,6 @@
 import { getRange } from "./spreadsheet";
 import * as EmailValidator from 'email-validator';
+import dayjs from 'dayjs'
 
 export type Guest = {
     first_name: string
@@ -80,8 +81,14 @@ export type GlobalData = Awaited<ReturnType<typeof fetchAll>>
 
 export let globalData: GlobalData | null = null
 
+let lastFetch = 0
+
 export async function getGlobalData() {
-    await fetchAll()
+    if (Date.now() > 60000 + lastFetch) {
+        await fetchAll()
+        lastFetch = Date.now()
+    }
+
     if (globalData === null) {
         globalData = await fetchAll()
     }
@@ -101,7 +108,7 @@ export async function fetchAll() {
         getRange('Docentes!A2:D'),
         getRange('Alumnos!A2:J'),
         getRange('Ex-Alumnos!A2:E'),
-        getRange('Eventos!A2:D'),
+        getRange('Eventos!A2:E'),
     ])
 
     const guests = guestsData.values!.map(([first_name, surname, dni_cuil, invited_by, event_id, timestamp]) => ({
@@ -151,7 +158,7 @@ export async function fetchAll() {
 
     const studentsParents: StudentParent[] = []
 
-    for(const student of students) {
+    for (const student of students) {
         if (student.mother_name.trim() && (student.mother_dni_cuil || student.mother_email.trim())) {
             studentsParents.push({
                 name: student.mother_name,
@@ -199,18 +206,18 @@ export async function fetchAll() {
             identities_by_username.set(identity.username, identity)
         }
 
-        if(identity.type == 'guest') {
+        if (identity.type == 'guest') {
             const prevIdentity = getIdentity(identity.id)
             const eventsSet = new Set<string>(prevIdentity?.events ?? [])
             const refSet = new Set(prevIdentity?.ref ?? [])
-            
+
             identity.events?.forEach(event => eventsSet.add(event))
             identity.ref?.forEach(ref => refSet.add(ref))
 
             identity.events = Array.from(eventsSet)
             identity.ref = Array.from(refSet)
-            if(prevIdentity) prevIdentity.events = identity.events
-            if(prevIdentity) prevIdentity.ref = identity.ref
+            if (prevIdentity) prevIdentity.events = identity.events
+            if (prevIdentity) prevIdentity.ref = identity.ref
         }
     }
 
@@ -227,43 +234,43 @@ export async function fetchAll() {
     allIdentitys.reverse()
 
     function getIdentity(dni_cuil_username: string): Identity | undefined {
-        if(!dni_cuil_username) return undefined
+        if (!dni_cuil_username) return undefined
 
         const cuild = cuildFromIdSafe(dni_cuil_username)
 
         if (cuild.valid && cuild.cuildata!.full) {
             const id = identitie_by_cuil.get(cuild.cuildata!.toString())
-            
-            if(id) return id
+
+            if (id) return id
 
             const ids = identities_by_dni.get(cuild.cuildata!.dni) ?? []
 
-            for(const id of ids) {
-                if(id.cuil_prefix == cuild.cuildata!.prefix && id.cuil_sufix == cuild.cuildata!.sufix && id.dni === cuild.cuildata?.dni) return id
+            for (const id of ids) {
+                if (id.cuil_prefix == cuild.cuildata!.prefix && id.cuil_sufix == cuild.cuildata!.sufix && id.dni === cuild.cuildata?.dni) return id
             }
 
-            for(const id of ids) {
-                if((!id.cuil_prefix || id.cuil_prefix == 0 || !id.cuil_sufix || id.cuil_sufix == 0) && id.dni === cuild.cuildata?.dni) return id
+            for (const id of ids) {
+                if ((!id.cuil_prefix || id.cuil_prefix == 0 || !id.cuil_sufix || id.cuil_sufix == 0) && id.dni === cuild.cuildata?.dni) return id
             }
         }
 
         if (cuild.valid && !cuild.cuildata!.full) {
             const id = identities_by_dni.get(cuild.cuildata!.dni)?.[0]
-            
-            if(id) return id
+
+            if (id) return id
         }
 
         const id = identities_by_username.get(dni_cuil_username)
 
-        if(id) return id
+        if (id) return id
     }
 
     function getCurrentEvents() {
         const now = new Date()
 
         return events.filter(event => {
-            const start = new Date(event.start_date)
-            const end = new Date(event.end_date)
+            const start = dayjs(event.start_date).startOf('day').toDate()
+            const end = dayjs(event.end_date).add(1, 'day').startOf('day').toDate()
 
             return start <= now && end >= now
         })
@@ -354,7 +361,7 @@ function identityFromStudentParent(parent: StudentParent): Identity {
 
     const isValidEmail = parent.email ? EmailValidator.validate(parent.email) : false
 
-    if(!cuildata && !isValidEmail) {
+    if (!cuildata && !isValidEmail) {
         throw new Error(`Student parent ${parent.name} has no CUIL nor email`)
     }
 

@@ -14,6 +14,7 @@ class RemotePerson {
   final String? invitedBy;
   final int? cuilPrefix;
   final int? cuilSufix;
+  final List<String> events;
   final PersonType type;
 
   RemotePerson({
@@ -24,6 +25,7 @@ class RemotePerson {
     required this.invitedBy,
     required this.cuilPrefix,
     required this.cuilSufix,
+    this.events = const [],
     required this.type,
   });
 
@@ -49,17 +51,17 @@ class RemotePerson {
 
   String get typeName {
     if (type == PersonType.staff) {
-      return 'Personal';
+      return 'staff';
     } else if (type == PersonType.student) {
-      return 'Estudiante';
+      return 'estudiante';
     } else if (type == PersonType.parent) {
-      return 'Padre o madre';
+      return 'padre o madre';
     } else if (type == PersonType.guest) {
-      return 'Visitante';
+      return 'visitante';
     } else if (type == PersonType.formerStudent) {
-      return 'Exalumno';
+      return 'exalumno';
     } else {
-      return 'Desconocido';
+      return 'desconocido';
     }
   }
 
@@ -85,6 +87,7 @@ class RemotePerson {
       invitedBy: json['invited_by'],
       cuilPrefix: json['cuil_prefix'],
       cuilSufix: json['cuil_sufix'],
+      events: json['events'] != null ? List<String>.from(json['events']) : [],
       type: type,
     );
   }
