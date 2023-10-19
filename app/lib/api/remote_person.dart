@@ -27,6 +27,9 @@ class RemotePerson {
     required this.type,
   });
 
+  bool get hasCuil => cuilPrefix != null && cuilSufix != null && cuilPrefix != 0 && cuilSufix != 0;
+  bool get hasDni => dni != null && dni != 0;
+
   String get displayId {
     if (username != null) return username!;
 
@@ -40,6 +43,9 @@ class RemotePerson {
 
     throw Exception('Invalid person id missing username or dni');
   }
+
+  String get displayCuil =>
+      "${cuilPrefix.toString().padLeft(2, '0')}-${dni.toString().padLeft(8, '0')}-${cuilSufix.toString().padLeft(1, '0')}";
 
   String get typeName {
     if (type == PersonType.staff) {

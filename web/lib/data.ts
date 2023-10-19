@@ -6,6 +6,8 @@ export type Guest = {
     surname: string
     dni_cuil: string
     invited_by: string
+    event_id: string
+    timestamp?: Date | string
 }
 
 export type Staff = {
@@ -54,7 +56,7 @@ export type StudentParent = {
 // final PersonType type;
 
 export type Identity = {
-    ref: Guest | Staff | Student | FormerStudent | StudentParent
+    ref: (Guest | Staff | Student | FormerStudent | StudentParent)[]
     id: string
     name: string
     username?: string
@@ -63,6 +65,7 @@ export type Identity = {
     cuil_prefix?: number
     cuil_sufix?: number
     type: 'student' | 'former-student' | 'staff' | 'parent' | 'former_student' | 'guest'
+    events?: string[]
 }
 
 export type GlobalData = Awaited<ReturnType<typeof fetchAll>>
@@ -84,17 +87,19 @@ export async function fetchAll() {
         studentsData,
         formerStudentsData,
     ] = await Promise.all([
-        getRange('Invitados!A2:D'),
+        getRange('Invitados!A2:F'),
         getRange('Docentes!A2:D'),
         getRange('Alumnos!A2:J'),
         getRange('Ex-Alumnos!A2:E'),
     ])
 
-    const guests = guestsData.values!.map(([first_name, surname, dni_cuil, invited_by]) => ({
+    const guests = guestsData.values!.map(([first_name, surname, dni_cuil, invited_by, event_id, timestamp]) => ({
         first_name,
         surname,
         dni_cuil,
         invited_by,
+        event_id,
+        timestamp,
     }) as Guest)
 
     const staffs = staffsData.values?.map(([username, name, email, dni_cuil]) => ({
@@ -148,7 +153,7 @@ export async function fetchAll() {
         }
     }
 
-    const allIdentitys = [
+    let allIdentitys = [
         ...guests.map(identityFromGuest),
         ...staffs.map(identityFromStaff),
         ...students.map(identityFromStudent),
@@ -175,7 +180,33 @@ export async function fetchAll() {
         if (identity.username && (identity.type == 'staff' || identity.type == 'student')) {
             identities_by_username.set(identity.username, identity)
         }
+
+        if(identity.type == 'guest') {
+            const prevIdentity = getIdentity(identity.id)
+            const eventsSet = new Set<string>(prevIdentity?.events ?? [])
+            const refSet = new Set(prevIdentity?.ref ?? [])
+            
+            identity.events?.forEach(event => eventsSet.add(event))
+            identity.ref?.forEach(ref => refSet.add(ref))
+
+            identity.events = Array.from(eventsSet)
+            identity.ref = Array.from(refSet)
+            if(prevIdentity) prevIdentity.events = identity.events
+            if(prevIdentity) prevIdentity.ref = identity.ref
+        }
     }
+
+    const deduplicate = new Set<string>()
+    allIdentitys.reverse()
+    allIdentitys = allIdentitys.filter(identity => {
+        if (identity.type == 'guest') {
+            if (deduplicate.has(identity.id)) return false
+            deduplicate.add(identity.id)
+        }
+
+        return true
+    })
+    allIdentitys.reverse()
 
     function getIdentity(dni_cuil_username: string): Identity | undefined {
         if(!dni_cuil_username) return undefined
@@ -228,7 +259,7 @@ function identityFromStudent(student: Student): Identity {
     const { cuildata } = cuildFromIdSafe(student.dni_cuil)
 
     return {
-        ref: student,
+        ref: [student],
         id: student.enrollment,
         name: student.name,
         username: student.enrollment,
@@ -247,7 +278,7 @@ function identityFromFormerStudent(formerStudent: FormerStudent): Identity {
     }
 
     return {
-        ref: formerStudent,
+        ref: [formerStudent],
         id: formerStudent.enrollment,
         name: formerStudent.name,
         username: formerStudent.enrollment,
@@ -262,7 +293,7 @@ function identityFromStaff(staff: Staff): Identity {
     const { cuildata } = cuildFromIdSafe(staff.dni_cuil)
 
     return {
-        ref: staff,
+        ref: [staff],
         id: staff.username,
         name: staff.name,
         username: staff.username,
@@ -275,13 +306,14 @@ function identityFromStaff(staff: Staff): Identity {
 
 function identityFromGuest(guest: Guest): Identity {
     return {
-        ref: guest,
+        ref: [guest],
         id: guest.dni_cuil,
         name: `${guest.first_name} ${guest.surname}`,
         dni: cuilFromId(guest.dni_cuil).dni,
         invited_by: guest.invited_by,
         cuil_prefix: cuilFromId(guest.dni_cuil).prefix,
         cuil_sufix: cuilFromId(guest.dni_cuil).sufix,
+        events: guest.event_id ? [guest.event_id] : [],
         type: 'guest',
     }
 }
@@ -296,7 +328,7 @@ function identityFromStudentParent(parent: StudentParent): Identity {
     }
 
     return {
-        ref: parent,
+        ref: [parent],
         id: parent.dni_cuil,
         username: parent.email,
         name: parent.name,
