@@ -48,6 +48,14 @@ export type StudentParent = {
     invited_by: string
 }
 
+export type Event = {
+    name: string
+    id: string
+    description: string
+    start_date: string
+    end_date: string
+}
+
 
 // final String id;
 // final String name;
@@ -73,6 +81,7 @@ export type GlobalData = Awaited<ReturnType<typeof fetchAll>>
 export let globalData: GlobalData | null = null
 
 export async function getGlobalData() {
+    await fetchAll()
     if (globalData === null) {
         globalData = await fetchAll()
     }
@@ -86,11 +95,13 @@ export async function fetchAll() {
         staffsData,
         studentsData,
         formerStudentsData,
+        eventsData,
     ] = await Promise.all([
         getRange('Invitados!A2:F'),
         getRange('Docentes!A2:D'),
         getRange('Alumnos!A2:J'),
         getRange('Ex-Alumnos!A2:E'),
+        getRange('Eventos!A2:D'),
     ])
 
     const guests = guestsData.values!.map(([first_name, surname, dni_cuil, invited_by, event_id, timestamp]) => ({
@@ -130,6 +141,13 @@ export async function fetchAll() {
         email,
     }) as FormerStudent) ?? []
 
+    const events = eventsData.values?.map(([name, id, description, start_date, end_date]) => ({
+        name,
+        id,
+        description,
+        start_date,
+        end_date,
+    }) as Event) ?? []
 
     const studentsParents: StudentParent[] = []
 
@@ -240,12 +258,25 @@ export async function fetchAll() {
         if(id) return id
     }
 
+    function getCurrentEvents() {
+        const now = new Date()
+
+        return events.filter(event => {
+            const start = new Date(event.start_date)
+            const end = new Date(event.end_date)
+
+            return start <= now && end >= now
+        })
+    }
+
     const data = {
         guests,
         staffs,
         students,
         formerStudents,
         studentsParents,
+        events,
+        getCurrentEvents,
         identities: allIdentitys,
         getIdentity,
     }

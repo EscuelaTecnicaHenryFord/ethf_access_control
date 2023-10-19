@@ -29,7 +29,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   }
 
   void fetchData() async {
-    final remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.cuil);
+    final remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.cuil, forceCurrentEvent: true);
     final invitedBy = remotePerson != null ? await AppApi.instance.fetchIdentity(remotePerson.invitedBy!) : null;
 
     if (!context.mounted) return;

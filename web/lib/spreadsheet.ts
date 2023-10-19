@@ -3,6 +3,14 @@ import { Awaitable } from 'next-auth'
 
 
 async function _getAuth() {
+    if (process.env.SERVICE_ACCOUNT) {
+        const auth = await google.auth.getClient({
+            credentials: JSON.parse(process.env.SERVICE_ACCOUNT),
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        })
+        return auth
+    }
+
     const auth = await google.auth.getClient({
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         keyFile: 'service-account.json',

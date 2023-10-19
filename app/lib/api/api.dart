@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:ethf_access_control_app/api/auth.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class AppApi {
@@ -18,7 +19,7 @@ class AppApi {
       query['event'] = event;
     }
 
-    final data = await jsonGet('/api/identity/$id', query.isNotEmpty ? query : null);
+    final data = await jsonGet('/api/identities/$id', query.isNotEmpty ? query : null);
 
     if (data == null) {
       return null;
@@ -57,4 +58,10 @@ class AppApi {
   static final AppApi instance = AppApi._();
 }
 
-const baseUrl = 'http://192.168.0.137:3000';
+String get baseUrl {
+  if (kDebugMode) {
+    return 'http://10.0.31.28:3000';
+  }
+
+  return 'https://ethf-access-control.vercel.app';
+}
