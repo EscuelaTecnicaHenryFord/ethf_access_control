@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
+import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +65,8 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     try {
       await AppApi.instance.postHistory(widget.personInfo.cuil, widget.personInfo.toJSON());
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Registro de ingreso exitoso")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registro de ingreso exitoso")));
+        providerKey.currentState?.updateHistory();
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -79,6 +79,8 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   void handleRegisterNewPerson() async {}
 
   bool isInvitedToCurrentEvent() {
+    if (remotePerson == null) return false;
+
     if (remotePerson!.type != PersonType.guest) return true;
 
     final currentEvents = events.where((e) => e.isCurrent).toList();

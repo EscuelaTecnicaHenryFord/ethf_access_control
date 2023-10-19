@@ -1,9 +1,8 @@
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
+import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:pretty_json/pretty_json.dart';
 
 void showPersonPage(BuildContext context, RemotePerson person) {
   Navigator.of(context).push(MaterialPageRoute(
@@ -80,6 +79,7 @@ class _PersonPageState extends State<PersonPage> {
       await AppApi.instance.postHistory(widget.person.id, widget.person.toJSON());
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registro de ingreso exitoso")));
+        providerKey.currentState?.updateHistory();
       }
     } catch (e) {
       if (kDebugMode) print(e);
@@ -116,23 +116,23 @@ class _PersonPageState extends State<PersonPage> {
               title: const Text('DNI'),
               subtitle: Text(widget.person.displayId),
             ),
-          if (history.isNotEmpty) const Divider(),
-          if (history.isNotEmpty) const ListTile(title: Text('Historial')),
-          for (final entry in history)
-            ListTile(
-              title: Text(DateFormat('dd/MM/yyyy HH:mm').format(entry.timestamp)),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Detalles'),
-                      content: Text("Datos escaneados: \n\n${prettyJson(entry.data)}"),
-                    );
-                  },
-                );
-              },
-            ),
+          // if (history.isNotEmpty) const Divider(),
+          // if (history.isNotEmpty) const ListTile(title: Text('Historial')),
+          // for (final entry in history)
+          //   ListTile(
+          //     title: Text(DateFormat('dd/MM/yyyy HH:mm').format(entry.timestamp)),
+          //     onTap: () {
+          //       showDialog(
+          //         context: context,
+          //         builder: (context) {
+          //           return AlertDialog(
+          //             title: const Text('Detalles'),
+          //             content: Text("Datos escaneados: \n\n${prettyJson(entry.data)}"),
+          //           );
+          //         },
+          //       );
+          //     },
+          //   ),
         ],
       ),
     );

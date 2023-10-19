@@ -2,6 +2,8 @@ import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:flutter/material.dart';
 
+final providerKey = GlobalKey<DataProviderWidgetState>();
+
 class DataProvider extends InheritedWidget {
   const DataProvider({super.key, required super.child, required this.state});
 

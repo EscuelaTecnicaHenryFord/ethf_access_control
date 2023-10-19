@@ -34,7 +34,7 @@ class DataWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DataProviderWidget(child: MainPage(title: 'ETHF Control de Acceso'));
+    return DataProviderWidget(key: providerKey, child: const MainPage(title: 'ETHF Control de Acceso'));
   }
 }
 
