@@ -48,3 +48,16 @@ export async function getRange(range: string) {
     })
     return res.data
 }
+
+export async function appendTo(range: string, data: (string | number | Date)[][]) {
+    const sheets = await getSpreedsheet()
+    const res = await sheets.spreadsheets.values.append({
+        spreadsheetId: getSheetId(),
+        range: range,
+        valueInputOption: 'RAW',
+        requestBody: {
+            values: data
+        }
+    })
+    return res.data
+}

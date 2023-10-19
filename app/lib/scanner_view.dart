@@ -37,7 +37,7 @@ class _ScannerViewState extends State<ScannerView> {
   }
 
   void handleError(Exception error) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No se pudo leer el documento")));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No se pudo leer el documento")));
   }
 
   @override

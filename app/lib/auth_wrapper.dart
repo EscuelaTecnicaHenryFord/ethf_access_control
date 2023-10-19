@@ -52,9 +52,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Future<void> _initialAuthCheck() async {
     var status = await AuthHandler.instance.getSessionStatus();
     while (status == SessionStatus.unknown && context.mounted) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Problemas autenticando. Reintentando...')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Problemas autenticando. Reintentando...')));
+      }
 
       await Future.delayed(const Duration(seconds: 1));
       status = await AuthHandler.instance.getSessionStatus();
@@ -108,8 +109,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return widget.child;
     }
 
-    if (status == SessionStatus.authenticated) {
-      return const CircularProgressIndicator();
+    if (status == SessionStatus.unknown) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     return const LoginPage();

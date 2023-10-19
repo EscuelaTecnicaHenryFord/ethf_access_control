@@ -38,6 +38,16 @@ class PersonInfo {
     );
   }
 
+  Map<String, dynamic> toJSON() {
+    return {
+      'first_name': firstName,
+      'last_name': lastName,
+      'dni': dni,
+      'date_of_birth': dateOfBirth.toIso8601String(),
+      'cuil_prefix_sufix': cuilPrefixSufix,
+    };
+  }
+
   String get displayName => toBeginningOfSentenceCase("$firstName $lastName")!;
 
   String get cuil {

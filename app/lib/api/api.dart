@@ -28,6 +28,16 @@ class AppApi {
     return RemotePerson.fromJson(data);
   }
 
+  Future<List<RemotePerson>> fetchIdentities() {
+    return jsonGet('/api/identities').then((data) {
+      if (data == null) {
+        return [];
+      }
+
+      return (data as List).map((e) => RemotePerson.fromJson(e)).toList();
+    });
+  }
+
   Future<RemotePerson?> fetchGuestIdentity(String id, String event) async {
     final data = await jsonGet('/api/guests/$id/$event');
 
@@ -68,7 +78,32 @@ class AppApi {
     return result;
   }
 
-  Future<dynamic> jsonGet(String path, [Map<String, String>? query]) async {
+  Future<void> postHistory(String id, dynamic data) async {
+    await jsonPost('/api/history', {
+      'identity': id,
+      'data': data,
+    });
+  }
+
+  Future<List<HistoryEntry>> fetchHistory() async {
+    final data = await jsonGet('/api/history');
+
+    if (data == null) {
+      return [];
+    }
+
+    return ((data as Map)['history'] as List).map((e) => HistoryEntry.fromJson(e)).toList();
+  }
+
+  Future<dynamic> jsonGet(String path, [Map<String, String>? query]) {
+    return jsonRequest(path, query: query);
+  }
+
+  Future<dynamic> jsonPost(String path, dynamic body) {
+    return jsonRequest(path, body: body, post: true);
+  }
+
+  Future<dynamic> jsonRequest(String path, {Map<String, String>? query, dynamic body, bool post = false}) async {
     final cookie = await AuthHandler.instance.getSecureCookie();
 
     if (cookie == null) {
@@ -79,10 +114,19 @@ class AppApi {
     final url = Uri.parse('$baseUrl$path');
     final urlWithQuery = query != null ? url.replace(queryParameters: query) : url;
 
-    final response = await http.get(urlWithQuery, headers: {
-      'Accept': 'application/json',
-      'Cookie': cookie,
-    });
+    late final http.Response response;
+
+    if (post) {
+      response = await http.post(urlWithQuery, body: jsonEncode(body), headers: {
+        'Accept': 'application/json',
+        'Cookie': cookie,
+      });
+    } else {
+      response = await http.get(urlWithQuery, headers: {
+        'Accept': 'application/json',
+        'Cookie': cookie,
+      });
+    }
 
     if (response.statusCode == 200) {
       final body = utf8.decode(response.bodyBytes);
@@ -142,5 +186,53 @@ class Event {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
     };
+  }
+}
+
+class HistoryEntry {
+  final String identity;
+  final DateTime timestamp;
+  final dynamic data;
+
+  HistoryEntry({
+    required this.identity,
+    required this.timestamp,
+    required this.data,
+  });
+
+  @override
+  String toString() {
+    String? firstName;
+    String? lastName;
+    if (data is Map && data['first_name'] is String) {
+      firstName = data['first_name'];
+    }
+    if (data is Map && data['last_name'] is String) {
+      lastName = data['last_name'];
+    } else if (data is Map && data['name'] is String && firstName == null) {
+      lastName = data['name'];
+    }
+
+    String text = identity;
+
+    if (lastName != null) {
+      text = '$lastName - $text';
+    }
+
+    if (firstName != null && lastName == null) {
+      text = '$firstName - $text';
+    } else if (firstName != null && lastName != null) {
+      text = '$firstName $text';
+    }
+
+    return text;
+  }
+
+  factory HistoryEntry.fromJson(Map<String, dynamic> json) {
+    return HistoryEntry(
+      identity: json['identity'] ?? '---',
+      timestamp: DateTime.parse(json['timestamp']),
+      data: json['data'],
+    );
   }
 }

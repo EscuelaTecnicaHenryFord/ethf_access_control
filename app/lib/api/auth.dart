@@ -42,6 +42,8 @@ class AuthHandler {
         return SessionStatus.authenticated;
       }
     } catch (e) {
+      print(e);
+
       return SessionStatus.unknown;
     }
 

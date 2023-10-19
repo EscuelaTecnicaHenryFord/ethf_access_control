@@ -15,7 +15,8 @@ class HomeScreen extends StatelessWidget {
 
     return ListView(
       children: [
-        for (final guest in data.guests)
+        const ListTile(title: Text("Invitados")),
+        for (final guest in data.currentGuests)
           ListTile(
             title: Text(guest.name),
             subtitle: Text(guest.id),

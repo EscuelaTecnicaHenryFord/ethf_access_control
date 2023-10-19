@@ -29,6 +29,7 @@ class Scanner extends StatelessWidget {
                 PersonInfo? personInfo;
                 try {
                   personInfo = PersonInfo.parse(text);
+                  print(personInfo);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

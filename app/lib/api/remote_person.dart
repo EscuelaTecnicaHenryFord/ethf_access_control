@@ -91,4 +91,18 @@ class RemotePerson {
       type: type,
     );
   }
+
+  dynamic toJSON() {
+    return {
+      'id': id,
+      'name': name,
+      'username': username,
+      'dni': dni,
+      'invited_by': invitedBy,
+      'cuil_prefix': cuilPrefix,
+      'cuil_sufix': cuilSufix,
+      'events': events,
+      'type': type.toString(),
+    };
+  }
 }

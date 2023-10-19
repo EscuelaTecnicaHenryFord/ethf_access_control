@@ -1,9 +1,12 @@
 import 'package:ethf_access_control_app/auth_wrapper.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
+import 'package:ethf_access_control_app/history_screen.dart';
 import 'package:ethf_access_control_app/home_screen.dart';
 import 'package:ethf_access_control_app/scanner_view.dart';
+import 'package:ethf_access_control_app/search.dart';
 import 'package:ethf_access_control_app/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +23,18 @@ class MyApp extends StatelessWidget {
       theme: appThemeData,
       darkTheme: appDarkThemeData,
       home: const AuthWrapper(
-        child: MainPage(title: 'ETHF Control de Acceso'),
+        child: DataWrapper(),
       ),
     );
+  }
+}
+
+class DataWrapper extends StatelessWidget {
+  const DataWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const DataProviderWidget(child: MainPage(title: 'ETHF Control de Acceso'));
   }
 }
 
@@ -39,6 +51,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   int index = 0;
 
   late final TabController controller;
+
+  final RefreshController refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -63,6 +77,23 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: () {
+              refreshController.requestRefresh();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: GlobalSearch(),
+              );
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: onDestinationSelected,
@@ -73,11 +104,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           NavigationDestination(icon: Icon(Icons.history), label: "Historial"),
         ],
       ),
-      body: DataProviderWidget(
+      body: SmartRefresher(
+        onRefresh: () async {
+          DataProvider.of(context).state.update();
+          refreshController.refreshCompleted();
+        },
+        controller: refreshController,
         child: TabBarView(controller: controller, children: const [
           HomeScreen(),
           ScannerView(),
-          Center(child: Text("Historial")),
+          HistoryScreen(),
         ]),
       ),
     );

@@ -83,8 +83,16 @@ export let globalData: GlobalData | null = null
 
 let lastFetch = 0
 
+function getCacheTime() {
+    if(process.env.NODE_ENV == 'production') {
+        return 60000
+    }
+
+    return 10000
+}
+
 export async function getGlobalData() {
-    if (Date.now() > 60000 + lastFetch) {
+    if (Date.now() > getCacheTime() + lastFetch) {
         await fetchAll()
         lastFetch = Date.now()
     }
@@ -179,7 +187,13 @@ export async function fetchAll() {
     }
 
     let allIdentitys = [
-        ...guests.map(identityFromGuest),
+        ...guests.map((d) => {
+            try {
+                return identityFromGuest(d)
+            } catch (error) {
+                return null
+            }
+        }).filter((d): d is Identity => d !== null),
         ...staffs.map(identityFromStaff),
         ...students.map(identityFromStudent),
         ...formerStudents.map(identityFromFormerStudent),
@@ -407,6 +421,8 @@ function cuildFromIdSafe(id: string) {
 
 function cuilFromId(id: string): Cuil {
     id = id.trim()
+
+
 
     let prefixNum = 0
     let dniNum = 0

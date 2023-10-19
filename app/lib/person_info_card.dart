@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/person_info.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class PersonInfoCard extends StatefulWidget {
@@ -55,7 +58,23 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     });
   }
 
-  void handleRegisterAttendance() async {}
+  bool actionLoading = false;
+
+  void handleRegisterAttendance() async {
+    if (actionLoading || loading) return;
+    actionLoading = true;
+    try {
+      await AppApi.instance.postHistory(widget.personInfo.cuil, widget.personInfo.toJSON());
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Registro de ingreso exitoso")));
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (kDebugMode) print(e);
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      actionLoading = false;
+    }
+  }
 
   void handleRegisterNewPerson() async {}
 
