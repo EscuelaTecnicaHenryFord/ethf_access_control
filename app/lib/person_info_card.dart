@@ -129,7 +129,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
 
     String inviteLabel = 'Registar invitado';
 
-    final isGuest = remotePerson?.type == PersonType.guest;
+    final isGuest = remotePerson?.type == PersonType.guest || remotePerson == null;
 
     if (currentEvents.length == 1) {
       inviteLabel = 'Registrar invitado a ${currentEvents.first.name}';

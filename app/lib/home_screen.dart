@@ -13,6 +13,24 @@ class HomeScreen extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    bool isInHistory(String id) {
+      final now = DateTime.now();
+
+      for (final entry in data.history) {
+        final date = entry.timestamp;
+
+        if (date.year != now.year || date.month != now.month || date.day != now.day) {
+          continue;
+        }
+
+        if (entry.identity == id) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     return ListView(
       children: [
         const ListTile(title: Text("Invitados")),
@@ -21,6 +39,12 @@ class HomeScreen extends StatelessWidget {
             title: Text(guest.name),
             subtitle: Text(guest.id),
             onTap: () => showPersonPage(context, guest),
+            trailing: isInHistory(guest.id)
+                ? const Icon(
+                    Icons.check,
+                    color: Colors.blue,
+                  )
+                : null,
           ),
       ],
     );
