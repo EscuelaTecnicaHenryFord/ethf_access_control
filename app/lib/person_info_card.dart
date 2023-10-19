@@ -20,6 +20,7 @@ class PersonInfoCard extends StatefulWidget {
 class _PersonInfoCardState extends State<PersonInfoCard> {
   RemotePerson? remotePerson;
   RemotePerson? invitedBy;
+  bool loading = true;
 
   @override
   void initState() {
@@ -28,16 +29,21 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   }
 
   void fetchData() async {
-    final remotePerson = await fetchIdentity(widget.personInfo.cuil);
-    final invitedBy = remotePerson != null ? await fetchIdentity(remotePerson.invitedBy!) : null;
+    final remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.cuil);
+    final invitedBy = remotePerson != null ? await AppApi.instance.fetchIdentity(remotePerson.invitedBy!) : null;
 
     if (!context.mounted) return;
 
     setState(() {
       this.remotePerson = remotePerson;
       this.invitedBy = invitedBy;
+      loading = false;
     });
   }
+
+  void handleRegisterAttendance() async {}
+
+  void handleRegisterNewPerson() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +65,18 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
               ),
               if (invitedBy != null)
                 Padding(
-                  padding: const EdgeInsets.only(left: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     "Invitado por ${invitedBy!.name} (${invitedBy!.id})",
                     style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              if (invitedBy == null && !loading)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    "La persona no está registrada para el evento de la fecha",
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red),
                   ),
                 ),
             ],
@@ -75,12 +89,24 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
               onDestinationSelected: (index) {
                 if (index == 0) {
                   Navigator.of(context).pop();
+                } else if (index == 1 && !loading && remotePerson != null) {
+                  handleRegisterAttendance();
+                } else if (index == 1 && !loading && remotePerson == null) {
+                  handleRegisterNewPerson();
                 }
               },
               selectedIndex: 1,
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.cancel), label: 'Cancelar'),
-                NavigationDestination(icon: Icon(Icons.done), label: 'Registrar ingreso'),
+              destinations: [
+                const NavigationDestination(icon: Icon(Icons.cancel), label: 'Cancelar'),
+                if (loading)
+                  const NavigationDestination(
+                    icon: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
+                    label: 'Registrar ingreso',
+                  ),
+                if (!loading && remotePerson != null)
+                  const NavigationDestination(icon: Icon(Icons.done), label: 'Registrar ingreso'),
+                if (!loading && remotePerson == null)
+                  const NavigationDestination(icon: Icon(Icons.person_add), label: 'Registar invitado'),
               ],
             ),
           ),
