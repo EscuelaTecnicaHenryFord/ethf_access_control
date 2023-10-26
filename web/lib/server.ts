@@ -134,13 +134,22 @@ export const appRouter = router({
             studentEnrolment: input.verificationData.student_enrolment,
         })
 
+        const inputCuilData = cuildFromIdSafe(input.guestData.dni.replaceAll('.', ''))
+
+        if(!inputCuilData.cuildata?.dni){
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Ingrese un DNI válido"
+            })
+        }
+
         const guests = await appRouter.createCaller({ server: true }).getGuests({
             verificationData: input.verificationData,
         })
 
+
         if (guests.find(guest => {
             const guestCuilData = cuildFromIdSafe(guest.dni_cuil.replaceAll('.', ''))
-            const inputCuilData = cuildFromIdSafe(input.guestData.dni.replaceAll('.', ''))
 
             return guestCuilData.cuildata?.dni === inputCuilData.cuildata?.dni && `HF${input.verificationData.student_enrolment}` === guest.invited_by
         })) {
@@ -153,7 +162,7 @@ export const appRouter = router({
         await appendTo('Invitados!A2:F', [[
             input.guestData.first_name,
             input.guestData.last_name,
-            input.guestData.dni,
+            inputCuilData.cuildata!.dni,
             "HF" + input.verificationData.student_enrolment,
             'expo_2023',
             new Date,
