@@ -20,7 +20,7 @@ export type Staff = {
 
 // Matrícula	Curso	Nombre	DNI o CUIL	Nombre Madre	Nombre Padre	E-mail Padre	E-mail Madre	DNI o CUIL Madre	DNI o CUIL Padre
 export type Student = {
-    enrollment: string
+    enrolment: string
     course: string
     name: string
     dni_cuil: string
@@ -34,7 +34,7 @@ export type Student = {
 
 // Matricula	Año de egreso	Nombre Completo	DNI	E-mail
 export type FormerStudent = {
-    enrollment: string
+    enrolment: string
     year: string
     name: string
     dni_cuil: string
@@ -135,8 +135,8 @@ export async function fetchAll() {
         dni_cuil,
     }) as Staff) ?? []
 
-    const students = studentsData.values?.map(([enrollment, course, name, dni_cuil, mother_name, father_name, mother_email, father_email, mother_dni_cuil, father_dni_cuil]) => ({
-        enrollment: enrollment.toLowerCase().trim(),
+    const students = studentsData.values?.map(([enrolment, course, name, dni_cuil, mother_name, father_name, mother_email, father_email, mother_dni_cuil, father_dni_cuil]) => ({
+        enrolment: enrolment.toLowerCase().trim(),
         course,
         name,
         dni_cuil,
@@ -148,8 +148,8 @@ export async function fetchAll() {
         father_dni_cuil,
     }) as Student) ?? []
 
-    const formerStudents = formerStudentsData.values?.map(([enrollment, year, name, dni_cuil, email]) => ({
-        enrollment: enrollment.toLowerCase().trim(),
+    const formerStudents = formerStudentsData.values?.map(([enrolment, year, name, dni_cuil, email]) => ({
+        enrolment: enrolment.toLowerCase().trim(),
         year,
         name,
         dni_cuil,
@@ -171,7 +171,7 @@ export async function fetchAll() {
             studentsParents.push({
                 name: student.mother_name,
                 dni_cuil: student.mother_dni_cuil,
-                invited_by: student.enrollment,
+                invited_by: student.enrolment,
                 email: student.mother_email,
             })
         }
@@ -180,7 +180,7 @@ export async function fetchAll() {
             studentsParents.push({
                 name: student.father_name,
                 dni_cuil: student.father_dni_cuil,
-                invited_by: student.enrollment,
+                invited_by: student.enrolment,
                 email: student.father_email,
             })
         }
@@ -197,7 +197,13 @@ export async function fetchAll() {
         ...staffs.map(identityFromStaff),
         ...students.map(identityFromStudent),
         ...formerStudents.map(identityFromFormerStudent),
-        ...studentsParents.map(identityFromStudentParent),
+        ...studentsParents.map((s) => {
+            try {
+                return identityFromStudentParent(s)
+            } catch (error) {
+                return null
+            }
+        }).filter((d): d is Identity => d !== null),
     ]
 
     const identities_by_dni = new Map<number, Identity[]>()
@@ -312,9 +318,9 @@ function identityFromStudent(student: Student): Identity {
 
     return {
         ref: [student],
-        id: student.enrollment,
+        id: student.enrolment,
         name: student.name,
-        username: student.enrollment,
+        username: student.enrolment,
         dni: cuildata?.dni,
         cuil_prefix: cuildata?.prefix,
         cuil_sufix: cuildata?.sufix,
@@ -325,15 +331,15 @@ function identityFromStudent(student: Student): Identity {
 function identityFromFormerStudent(formerStudent: FormerStudent): Identity {
     const { cuildata } = cuildFromIdSafe(formerStudent.dni_cuil)
 
-    if (!cuildata && !formerStudent.enrollment) {
-        throw new Error(`Former student ${formerStudent.name} has no enrollment nor CUIL`)
+    if (!cuildata && !formerStudent.enrolment) {
+        throw new Error(`Former student ${formerStudent.name} has no enrolment nor CUIL`)
     }
 
     return {
         ref: [formerStudent],
-        id: formerStudent.enrollment,
+        id: formerStudent.enrolment,
         name: formerStudent.name,
-        username: formerStudent.enrollment,
+        username: formerStudent.enrolment,
         dni: cuildata?.dni,
         cuil_prefix: cuildata?.prefix,
         cuil_sufix: cuildata?.sufix,
@@ -403,7 +409,7 @@ type Cuil = {
     toString(): string
 }
 
-function cuildFromIdSafe(id: string) {
+export function cuildFromIdSafe(id: string) {
     try {
         return {
             cuildata: cuilFromId(id),
@@ -419,7 +425,7 @@ function cuildFromIdSafe(id: string) {
     }
 }
 
-function cuilFromId(id: string): Cuil {
+export function cuilFromId(id: string): Cuil {
     id = id.trim()
 
 

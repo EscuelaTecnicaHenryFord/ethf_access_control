@@ -61,3 +61,39 @@ export async function appendTo(range: string, data: (string | number | Date)[][]
     })
     return res.data
 }
+
+
+export async function clearRows(sheetName: string, callback: (row: string[]) => Awaitable<boolean>) {
+    const ranges: string[] = []
+
+    await visitRowOfRange(sheetName, async (index, row) => {
+        const shouldClear = await callback(row)
+        if (shouldClear) {
+            ranges.push(`${sheetName}!A${index+1}:Z`)
+        }
+    })
+
+    const sheets = await getSpreedsheet()
+
+    console.log(ranges)
+
+    const res = await sheets.spreadsheets.values.batchClear({
+        spreadsheetId: getSheetId(),
+        requestBody: {
+            ranges
+        }
+    })
+    return res.data
+}
+
+export async function visitRowOfRange(sheetName: string, callback: (index: number, row: string[]) => Awaitable<void>) {
+    const sheets = await getSpreedsheet()
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: getSheetId(),
+        range: `${sheetName}!A1:Z`
+    })
+    const rows = res.data.values!
+    for (const row of rows) {
+        await callback(rows.indexOf(row), row)
+    }
+}

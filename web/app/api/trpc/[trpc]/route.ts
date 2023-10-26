@@ -16,10 +16,9 @@ const all = (request: Request) => {
     endpoint: '/api/trpc',
     req: request,
     router: appRouter,
-    createContext: (opts) =>{
-      const session = getSession()
+    createContext: () =>{
       return {
-        session,
+        server: true
       }
     },
   });

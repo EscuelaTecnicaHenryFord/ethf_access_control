@@ -15,7 +15,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { client, studentDataSchema } from "@/lib/client"
+import { client, parentDataVerificationSchema, studentDataSchema } from "@/lib/client"
 import { TRPCClientError } from "@trpc/client"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
@@ -23,22 +23,27 @@ import { AppRouterOutputs } from "@/lib/server"
 
 
 
-export function FormVerifyStudentData(props: { onStudentVerified: (student: AppRouterOutputs['verifyStudentData']) => unknown }) {
-    const form = useForm<z.infer<typeof studentDataSchema>>({
-        resolver: zodResolver(studentDataSchema),
+export function FormVerifyParentsData(props: { studentData: AppRouterOutputs['verifyStudentData'] | undefined, onVerificationCompleted: (data: AppRouterOutputs['verifyStudentDataWithParents']) => unknown }) {
+    const form = useForm<z.infer<typeof parentDataVerificationSchema>>({
+        resolver: zodResolver(parentDataVerificationSchema),
         defaultValues: {
-            studentDNI: "",
-            studentEnrolment: "",
+            fatherDNI: "",
+            motherDNI: "",
         },
     })
 
     const [loading, setLoading] = useState(false)
 
-    async function onSubmit(values: z.infer<typeof studentDataSchema>) {
+    async function onSubmit(values: z.infer<typeof parentDataVerificationSchema>) {
         try {
             setLoading(true)
-            const result = await client.verifyStudentData.query(values)
-            props.onStudentVerified(result)
+            const result = await client.verifyStudentDataWithParents.mutate({
+                studentDNI: props.studentData!.student_dni,
+                studentEnrolment: props.studentData!.student_enrolment!,
+                ...values,
+            })
+            props.onVerificationCompleted(result)
+            // props.onStudentVerified(result)
         } catch (error) {
             if (error instanceof TRPCClientError) {
                 const code = error.data?.code
@@ -49,6 +54,7 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
                     })
                 }
             }
+            console.error(error)
         } finally {
             setLoading(false)
         }
@@ -59,44 +65,38 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 md:grid grid-cols-2 pt-10">
                 <div className="col-span-2">
                     <h2 className="font-medium text-lg">Invitaciones expo 2023</h2>
-                    <p className="mt-2">Este formulario está dirigido a los padres de alumnos actuales del colegio para que puedan registrar invitados.</p>
+                    <p className="mt-2">Verificar información de los padres de {props.studentData?.student_name}</p>
                 </div>
                 <div className="col-span-2">
-                    <h3 className="font-medium text-lg">Paso 1: verificar datos del estudiante</h3>
+                    <h3 className="font-medium text-lg">Paso 2: verificar datos de los padres</h3>
                 </div>
 
-                <FormField
+                {props.studentData?.father_name && <FormField
                     control={form.control}
-                    name="studentDNI"
+                    name="fatherDNI"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>DNI estudiante</FormLabel>
+                            <FormLabel>DNI de {props.studentData?.father_name}</FormLabel>
                             <FormControl>
                                 <Input placeholder="99.999.999" {...field} />
                             </FormControl>
-                            {/* <FormDescription>
-                                DNI del estudiante
-                            </FormDescription> */}
                             <FormMessage />
                         </FormItem>
                     )}
-                />
-                <FormField
+                />}
+                {props.studentData?.mother_name && <FormField
                     control={form.control}
-                    name="studentEnrolment"
+                    name="motherDNI"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Matrícula el estudiante</FormLabel>
+                            <FormLabel>DNI de {props.studentData?.mother_name}</FormLabel>
                             <FormControl>
-                                <Input placeholder="HF9999" {...field} />
+                                <Input placeholder="99.999.999" {...field} />
                             </FormControl>
-                            {/* <FormDescription>
-                                Matricula del estudiante
-                            </FormDescription> */}
                             <FormMessage />
                         </FormItem>
                     )}
-                />
+                />}
                 {form.formState.errors.root && (
                     <div className="col-span-2">
                         <p className="text-red-500 font-medium">{form.formState.errors.root.message}</p>
