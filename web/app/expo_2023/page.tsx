@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { FormVerifyStudentData } from "./forme_page_1"
 
 export default function Home() {
   // const session = await getSession()
@@ -13,6 +14,11 @@ export default function Home() {
   // const data = await getGlobalData()
 
   const [formPart, setFormPart] = useState(1)
+
+
+  return <div className="container max-w-[800px]">
+    <FormVerifyStudentData />
+  </div>
 
   function nextFormPart() {
     setFormPart((prev) => {
