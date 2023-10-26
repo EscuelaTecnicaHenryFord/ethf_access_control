@@ -5,7 +5,7 @@ import z from 'zod';
 export const client = createTRPCProxyClient<AppRouter>({
     links: [
         httpBatchLink({
-            url: 'http://localhost:3000/api/trpc',
+            url: '/api/trpc',
             // You can pass any HTTP headers you wish here
             async headers() {
                 return {};
