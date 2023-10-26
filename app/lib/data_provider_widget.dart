@@ -39,6 +39,7 @@ class DataProviderWidgetState extends State<DataProviderWidget> {
   List<RemotePerson> guests = [];
   List<Event> events = [];
   List<HistoryEntry> history = [];
+  Set<String> registeredGuestsToday = {};
 
   int lastUpdate = DateTime.now().microsecondsSinceEpoch;
 
@@ -67,13 +68,13 @@ class DataProviderWidgetState extends State<DataProviderWidget> {
   void fetchData() async {
     final guests = await AppApi.instance.fetchGuests();
     final events = await AppApi.instance.fetchEvents();
-    final history = await AppApi.instance.fetchHistory();
+
+    await updateHistory();
 
     setState(() {
       loading = false;
       this.guests = guests;
       this.events = events;
-      this.history = history;
       lastUpdate = DateTime.now().microsecondsSinceEpoch;
     });
   }
@@ -82,12 +83,18 @@ class DataProviderWidgetState extends State<DataProviderWidget> {
     fetchData();
   }
 
-  void updateHistory() async {
+  Future<void> updateHistory() async {
     final history = await AppApi.instance.fetchHistory();
 
     setState(() {
       this.history = history;
       lastUpdate = DateTime.now().microsecondsSinceEpoch;
+
+      for (final entry in history) {
+        if (entry.isToday) {
+          registeredGuestsToday.add(entry.identity);
+        }
+      }
     });
   }
 

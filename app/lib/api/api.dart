@@ -228,6 +228,11 @@ class HistoryEntry {
     return text;
   }
 
+  bool get isToday {
+    final now = DateTime.now();
+    return timestamp.day == now.day && timestamp.month == now.month && timestamp.year == now.year;
+  }
+
   factory HistoryEntry.fromJson(Map<String, dynamic> json) {
     return HistoryEntry(
       identity: json['identity'] ?? '---',

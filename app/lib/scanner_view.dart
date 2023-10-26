@@ -27,6 +27,8 @@ class _ScannerViewState extends State<ScannerView> {
 
     scanned.add(personInfo.dni);
 
+    final data = DataProvider.of(context).state;
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -39,7 +41,7 @@ class _ScannerViewState extends State<ScannerView> {
           builder: (context) {
             return PersonInfoCard(
               personInfo: personInfo,
-              history: history,
+              data: data,
             );
           },
         );

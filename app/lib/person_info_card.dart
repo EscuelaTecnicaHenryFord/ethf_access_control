@@ -9,10 +9,10 @@ class PersonInfoCard extends StatefulWidget {
   const PersonInfoCard({
     super.key,
     required this.personInfo,
-    required this.history,
+    required this.data,
   });
 
-  final List<HistoryEntry> history;
+  final DataProviderWidgetState data;
   final PersonInfo personInfo;
 
   static const height = 110.0;
@@ -65,7 +65,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     if (actionLoading || loading) return;
     actionLoading = true;
     try {
-      await AppApi.instance.postHistory(widget.personInfo.cuil, widget.personInfo.toJSON());
+      await AppApi.instance.postHistory(widget.personInfo.dni, widget.personInfo.toJSON());
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registro de ingreso exitoso")));
         providerKey.currentState?.updateHistory();
@@ -129,20 +129,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final today = DateTime.now();
-
-    bool isAlreadyIn = false;
-
-    for (final entry in widget.history) {
-      if (entry.timestamp.day == today.day &&
-          entry.timestamp.month == today.month &&
-          entry.timestamp.year == today.year) {
-        if (entry.identity == widget.personInfo.cuil) {
-          isAlreadyIn = true;
-          break;
-        }
-      }
-    }
+    bool isAlreadyIn = widget.data.registeredGuestsToday.contains(widget.personInfo.dni);
 
     String inviteLabel = 'Registar invitado';
 

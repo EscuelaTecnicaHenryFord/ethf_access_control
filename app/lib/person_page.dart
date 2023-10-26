@@ -3,6 +3,8 @@ import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pretty_json/pretty_json.dart';
 
 void showPersonPage(BuildContext context, RemotePerson person) {
   Navigator.of(context).push(MaterialPageRoute(
@@ -30,7 +32,7 @@ class _PersonPageState extends State<PersonPage> {
   void fetchHistory() {
     AppApi.instance.fetchHistory().then((value) {
       setState(() {
-        history = value;
+        history = value.where((element) => element.identity == widget.person.id).toList();
       });
     });
   }
@@ -92,15 +94,19 @@ class _PersonPageState extends State<PersonPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAlreadyIn = history.where((element) => element.isToday).isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.person.name),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: actionLoading ? null : handleRegisterAttendance,
-        label: const Text("Registrar ingreso"),
-        icon: const Icon(Icons.done),
-      ),
+      floatingActionButton: !isAlreadyIn
+          ? FloatingActionButton.extended(
+              onPressed: actionLoading ? null : handleRegisterAttendance,
+              label: const Text("Registrar ingreso"),
+              icon: const Icon(Icons.done),
+            )
+          : null,
       body: ListView(
         children: [
           ListTile(
@@ -116,23 +122,23 @@ class _PersonPageState extends State<PersonPage> {
               title: const Text('DNI'),
               subtitle: Text(widget.person.displayId),
             ),
-          // if (history.isNotEmpty) const Divider(),
-          // if (history.isNotEmpty) const ListTile(title: Text('Historial')),
-          // for (final entry in history)
-          //   ListTile(
-          //     title: Text(DateFormat('dd/MM/yyyy HH:mm').format(entry.timestamp)),
-          //     onTap: () {
-          //       showDialog(
-          //         context: context,
-          //         builder: (context) {
-          //           return AlertDialog(
-          //             title: const Text('Detalles'),
-          //             content: Text("Datos escaneados: \n\n${prettyJson(entry.data)}"),
-          //           );
-          //         },
-          //       );
-          //     },
-          //   ),
+          if (history.isNotEmpty) const Divider(color: Color.fromARGB(60, 127, 127, 127)),
+          if (history.isNotEmpty) const ListTile(title: Text('Historial')),
+          for (final entry in history)
+            ListTile(
+              title: Text(DateFormat('dd/MM/yyyy HH:mm').format(entry.timestamp)),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Detalles'),
+                      content: Text("Datos escaneados: \n\n${prettyJson(entry.data)}"),
+                    );
+                  },
+                );
+              },
+            ),
         ],
       ),
     );

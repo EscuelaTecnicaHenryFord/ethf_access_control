@@ -14,21 +14,7 @@ class HomeScreen extends StatelessWidget {
     }
 
     bool isInHistory(String id) {
-      final now = DateTime.now();
-
-      for (final entry in data.history) {
-        final date = entry.timestamp;
-
-        if (date.year != now.year || date.month != now.month || date.day != now.day) {
-          continue;
-        }
-
-        if (entry.identity == id) {
-          return true;
-        }
-      }
-
-      return false;
+      return data.registeredGuestsToday.contains(id);
     }
 
     return ListView(
