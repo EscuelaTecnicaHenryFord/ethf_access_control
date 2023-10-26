@@ -1,3 +1,5 @@
+import 'package:ethf_access_control_app/api/api.dart';
+import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:ethf_access_control_app/person_info_card.dart';
 import 'package:ethf_access_control_app/scanner.dart';
@@ -14,10 +16,16 @@ class _ScannerViewState extends State<ScannerView> {
   PersonInfo? personInfo;
   int index = 0;
 
+  Set<String> scanned = {};
+
   void showPersonInfo(PersonInfo personInfo) {
+    if (scanned.contains(personInfo.dni)) return;
+
     setState(() {
       this.personInfo = personInfo;
     });
+
+    scanned.add(personInfo.dni);
 
     showModalBottomSheet(
       context: context,
@@ -29,15 +37,25 @@ class _ScannerViewState extends State<ScannerView> {
           enableDrag: true,
           onClosing: () {},
           builder: (context) {
-            return PersonInfoCard(personInfo: personInfo);
+            return PersonInfoCard(
+              personInfo: personInfo,
+              history: history,
+            );
           },
         );
       },
-    );
+    ).then((value) {
+      scanned.remove(personInfo.dni);
+    });
   }
 
   void handleError(Exception error) {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No se pudo leer el documento")));
+  }
+
+  List<HistoryEntry> get history {
+    final data = DataProvider.of(context).state;
+    return data.history;
   }
 
   @override

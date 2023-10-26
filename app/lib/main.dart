@@ -34,7 +34,7 @@ class DataWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DataProviderWidget(key: providerKey, child: const MainPage(title: 'ETHF Control de Acceso'));
+    return DataProviderWidget(key: providerKey, child: const MainPage(title: 'Control de Acceso'));
   }
 }
 
@@ -71,6 +71,15 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     controller.animateTo(value);
   }
 
+  int get currentRegisteredToday {
+    final data = DataProvider.of(context).state;
+    final today = DateTime.now();
+    return data.history
+        .where(
+            (e) => e.timestamp.day == today.day && e.timestamp.month == today.month && e.timestamp.year == today.year)
+        .length;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,6 +87,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
         actions: [
+          IconButton(
+              onPressed: () {},
+              icon: Text(
+                currentRegisteredToday.toString(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              )),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () {

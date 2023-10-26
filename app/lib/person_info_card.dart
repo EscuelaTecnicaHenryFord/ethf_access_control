@@ -9,8 +9,10 @@ class PersonInfoCard extends StatefulWidget {
   const PersonInfoCard({
     super.key,
     required this.personInfo,
+    required this.history,
   });
 
+  final List<HistoryEntry> history;
   final PersonInfo personInfo;
 
   static const height = 110.0;
@@ -127,6 +129,21 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final today = DateTime.now();
+
+    bool isAlreadyIn = false;
+
+    for (final entry in widget.history) {
+      if (entry.timestamp.day == today.day &&
+          entry.timestamp.month == today.month &&
+          entry.timestamp.year == today.year) {
+        if (entry.identity == widget.personInfo.cuil) {
+          isAlreadyIn = true;
+          break;
+        }
+      }
+    }
+
     String inviteLabel = 'Registar invitado';
 
     final isGuest = remotePerson?.type == PersonType.guest || remotePerson == null;
@@ -206,8 +223,10 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
               onDestinationSelected: (index) {
                 if (index == 0) {
                   Navigator.of(context).pop();
-                } else if (index == 1 && !loading && remotePerson != null) {
+                } else if (index == 1 && !loading && remotePerson != null && !isAlreadyIn) {
                   handleRegisterAttendance();
+                } else if (index == 1 && !loading && remotePerson != null && isAlreadyIn) {
+                  Navigator.of(context).pop();
                 } else if (index == 1 && !loading && remotePerson == null) {
                   handleRegisterNewPerson();
                 }
@@ -220,8 +239,10 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
                     icon: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
                     label: 'Registrar ingreso',
                   ),
-                if (!loading && isInvitedToCurrentEvent())
+                if (!loading && isInvitedToCurrentEvent() && !isAlreadyIn)
                   const NavigationDestination(icon: Icon(Icons.done), label: 'Registrar ingreso'),
+                if (!loading && isInvitedToCurrentEvent() && isAlreadyIn)
+                  const NavigationDestination(icon: Icon(Icons.close), label: 'Ya ingresado'),
                 if (!loading && !isInvitedToCurrentEvent())
                   NavigationDestination(icon: const Icon(Icons.person_add), label: inviteLabel),
               ],
