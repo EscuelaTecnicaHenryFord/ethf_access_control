@@ -3,7 +3,7 @@ import { enrolmentRegex, studentDataSchema, parentDataVerificationSchema, verifi
 import { Student, cuildFromIdSafe, fetchAll, getGlobalData } from "./data";
 import { publicProcedure, router } from "./trpc";
 import z from "zod";
-import { appendTo, clearRows } from "./spreadsheet";
+import { appendTo, changeRow, clearRows } from "./spreadsheet";
 
 export const appRouter = router({
     verifyStudentData: publicProcedure.input(studentDataSchema).query(async ({ ctx, input }) => {
@@ -94,11 +94,22 @@ export const appRouter = router({
                 })
             } else if (!studentData.father_dni) {
                 // Registar dni padre
+                await changeRow('Alumnos', (row) => {
+                    // Matrícula	Curso	Nombre	DNI o CUIL	Nombre Madre	Nombre Padre	E-mail Padre	E-mail Madre	DNI o CUIL Madre	DNI o CUIL Padre
+                    const [enrolment, course, name, dni, fatherName, motherName, fatherEmail, motherEmail, _dniMother, _dniFather] = row
+
+                    if (enrolment !== "HF" + studentData.student_enrolment) {
+                        return null
+                    }
+
+                    return [enrolment, course, name, dni, fatherName, motherName, fatherEmail, motherEmail, _dniMother, dniFather]
+                })
             }
         }
 
+        console.log(dniMother, studentData.mother_dni)
 
-        if (studentData.mother_dni && dniMother) {
+        if (studentData.mother_name && dniMother) {
             if (studentData.mother_dni && studentData.mother_dni !== dniMother) {
                 console.log("dni madre no coinciden", studentData.mother_dni, dniMother)
                 throw new TRPCError({
@@ -106,6 +117,15 @@ export const appRouter = router({
                 })
             } else if (!studentData.mother_dni) {
                 // Registar dni madre
+                await changeRow('Alumnos', (row) => {
+                    // Matrícula	Curso	Nombre	DNI o CUIL	Nombre Madre	Nombre Padre	E-mail Padre	E-mail Madre	DNI o CUIL Madre	DNI o CUIL Padre
+                    const [enrolment, course, name, dni, fatherName, motherName, fatherEmail, motherEmail, _dniMother, _dniFather] = row
+                    if (enrolment !== "HF" + studentData.student_enrolment) {
+                        return null
+                    }
+
+                    return [enrolment, course, name, dni, fatherName, motherName, fatherEmail, motherEmail, dniMother, _dniFather]
+                })
             }
         }
 
@@ -136,7 +156,7 @@ export const appRouter = router({
 
         const inputCuilData = cuildFromIdSafe(input.guestData.dni.replaceAll('.', ''))
 
-        if(!inputCuilData.cuildata?.dni){
+        if (!inputCuilData.cuildata?.dni) {
             throw new TRPCError({
                 code: "BAD_REQUEST",
                 message: "Ingrese un DNI válido"

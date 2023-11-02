@@ -97,3 +97,25 @@ export async function visitRowOfRange(sheetName: string, callback: (index: numbe
         await callback(rows.indexOf(row), row)
     }
 }
+
+export async function changeRow(sheetName: string, callback: (row: string[]) => (Awaitable<(string | number | Date)[]> | null)) {
+    const ranges: string[] = []
+
+    const sheets = await getSpreedsheet()
+
+    await visitRowOfRange(sheetName, async (index, row) => {
+        const changes = await callback(row)
+        if (changes) {
+            const rowRange = `${sheetName}!A${index+1}:Z${index+1}`
+
+            sheets.spreadsheets.values.update({
+                spreadsheetId: getSheetId(),
+                range: rowRange,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {
+                    values: [changes]
+                }
+            })
+        }
+    })
+}
