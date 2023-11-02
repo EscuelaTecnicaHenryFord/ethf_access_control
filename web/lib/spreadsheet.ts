@@ -69,7 +69,7 @@ export async function clearRows(sheetName: string, callback: (row: string[]) => 
     await visitRowOfRange(sheetName, async (index, row) => {
         const shouldClear = await callback(row)
         if (shouldClear) {
-            ranges.push(`${sheetName}!A${index+1}:Z`)
+            ranges.push(`${sheetName}!A${index+1}:Z${index+1}`)
         }
     })
 
