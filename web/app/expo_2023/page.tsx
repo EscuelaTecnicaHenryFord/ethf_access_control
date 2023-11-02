@@ -20,17 +20,26 @@ export default function Home() {
   const [studentData, setStudentData] = useState<AppRouterOutputs['verifyStudentData'] | undefined>(undefined)
   const [verificationData, setVerificationData] = useState<AppRouterOutputs['verifyStudentDataWithParents'] | undefined>(undefined)
 
-  return <div className="container max-w-[800px]">
-    {formSection === 1 && <FormVerifyStudentData onStudentVerified={data => {
-      console.log(data)
-      setStudentData(data)
-      setFormSection(2)
-    }} />}
-    {formSection === 2 && <FormVerifyParentsData studentData={studentData} onVerificationCompleted={(v) => {
-      console.log("Verification data", v)
-      setVerificationData(v)
-      setFormSection(3)
-    }} />}
-    {formSection === 3 && <ManageGuests studentData={studentData} verificationData={verificationData} />}
-  </div>
+  return <>
+    <div className="text-lg font-medium border-b border-stone-200">
+      <div className="container flex max-w-[800px] items-center justify-between">
+        <img src="https://www.henryford.edu.ar/favicon.ico" className="max-h-[50px]" alt="Logo" />
+        <a href="https://www.henryford.edu.ar" className="py-5">Escuela Técnica Henry Ford</a>
+        <span></span>
+      </div>
+    </div>
+    <div className="container max-w-[800px]">
+
+      {formSection === 1 && <FormVerifyStudentData onStudentVerified={data => {
+        console.log(data)
+        setStudentData(data)
+        setFormSection(2)
+      }} />}
+      {formSection === 2 && <FormVerifyParentsData studentData={studentData} onVerificationCompleted={(v) => {
+        console.log("Verification data", v)
+        setVerificationData(v)
+        setFormSection(3)
+      }} />}
+      {formSection === 3 && <ManageGuests studentData={studentData} verificationData={verificationData} />}
+    </div></>
 }
