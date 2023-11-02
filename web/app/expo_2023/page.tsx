@@ -22,10 +22,9 @@ export default function Home() {
 
   return <>
     <div className="text-lg font-medium border-b border-stone-200">
-      <div className="container flex max-w-[800px] items-center justify-between">
-        <img src="https://www.henryford.edu.ar/favicon.ico" className="max-h-[50px]" alt="Logo" />
+      <div className="container flex max-w-[800px] items-center gap-2">
+        <img src="https://www.henryford.edu.ar/favicon.ico" className="max-h-[40px]" alt="Logo" />
         <a href="https://www.henryford.edu.ar" className="py-5">Escuela Técnica Henry Ford</a>
-        <span></span>
       </div>
     </div>
     <div className="container max-w-[800px]">
