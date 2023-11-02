@@ -107,8 +107,6 @@ export const appRouter = router({
             }
         }
 
-        console.log(dniMother, studentData.mother_dni)
-
         if (studentData.mother_name && dniMother) {
             if (studentData.mother_dni && studentData.mother_dni !== dniMother) {
                 console.log("dni madre no coinciden", studentData.mother_dni, dniMother)
@@ -146,7 +144,6 @@ export const appRouter = router({
         verificationData: verificationDataSchema,
         guestData: addGuestSchema,
     })).mutation(async ({ ctx, input }) => {
-        console.log(input)
         await appRouter.createCaller({ server: true }).verifyStudentDataWithParents({
             fatherDNI: input.verificationData.dni_father?.toString() || '',
             motherDNI: input.verificationData.dni_mother?.toString() || '',

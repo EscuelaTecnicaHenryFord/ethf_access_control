@@ -28,8 +28,6 @@ export async function GET(request: Request) {
         })
     }
 
-    console.log(data.getCurrentEvents())
-
     if(eventId && responseData) {
         responseData = responseData.filter(identity => {
             if(!identity.events?.find(event => event === eventId)) {
@@ -41,6 +39,12 @@ export async function GET(request: Request) {
 
     if(guestsOnly && responseData) {
         responseData = responseData.filter(identity => identity.type === 'guest')
+    }
+
+    for(const id of data.identities) {
+        if(id.name.toLocaleLowerCase().includes('cichero')) {
+            console.log(id)
+        }
     }
 
     return new Response(JSON.stringify(responseData), {

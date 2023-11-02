@@ -30,13 +30,10 @@ export default function Home() {
     <div className="container max-w-[800px]">
 
       {formSection === 1 && <FormVerifyStudentData onStudentVerified={data => {
-        console.log(data)
         setStudentData(data)
         setFormSection(2)
       }} />}
       {formSection === 2 && <FormVerifyParentsData studentData={studentData} onVerificationCompleted={(v) => {
-        console.log("Verification data", v)
-        setVerificationData(v)
         setFormSection(3)
       }} />}
       {formSection === 3 && <ManageGuests studentData={studentData} verificationData={verificationData} />}

@@ -37,6 +37,11 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
 
   void fetchData() async {
     remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.cuil);
+
+    if (kDebugMode) {
+      print("Found: $remotePerson");
+    }
+
     final events = await AppApi.instance.fetchEvents();
     this.events = events;
 

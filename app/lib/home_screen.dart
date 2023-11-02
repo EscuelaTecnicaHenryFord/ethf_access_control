@@ -19,11 +19,11 @@ class HomeScreen extends StatelessWidget {
 
     return ListView(
       children: [
-        const ListTile(title: Text("Invitados")),
+        ListTile(tileColor: Colors.grey.shade900, title: const Text("Invitados")),
         for (final guest in data.currentGuests)
           ListTile(
             title: Text(guest.name),
-            subtitle: Text(guest.id),
+            subtitle: Text("${guest.id} - ${guest.typeName}"),
             onTap: () => showPersonPage(context, guest),
             trailing: isInHistory(guest.id)
                 ? const Icon(

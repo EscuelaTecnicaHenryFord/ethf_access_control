@@ -75,8 +75,6 @@ export async function clearRows(sheetName: string, callback: (row: string[]) => 
 
     const sheets = await getSpreedsheet()
 
-    console.log(ranges)
-
     const res = await sheets.spreadsheets.values.batchClear({
         spreadsheetId: getSheetId(),
         requestBody: {

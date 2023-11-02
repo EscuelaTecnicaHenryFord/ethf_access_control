@@ -40,6 +40,11 @@ class _PersonPageState extends State<PersonPage> {
   @override
   void initState() {
     fetchHistory();
+
+    if (kDebugMode) {
+      print(widget.person.toJSON());
+    }
+
     super.initState();
   }
 
@@ -120,7 +125,7 @@ class _PersonPageState extends State<PersonPage> {
           if (!widget.person.hasCuil && widget.person.hasDni)
             ListTile(
               title: const Text('DNI'),
-              subtitle: Text(widget.person.displayId),
+              subtitle: Text(widget.person.dni.toString()),
             ),
           if (history.isNotEmpty) const Divider(color: Color.fromARGB(60, 127, 127, 127)),
           if (history.isNotEmpty) const ListTile(title: Text('Historial')),

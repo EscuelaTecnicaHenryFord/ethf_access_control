@@ -52,6 +52,7 @@ export type StudentParent = {
 export type Event = {
     name: string
     id: string
+    former_students_invited: boolean
     description: string
     start_date: string
     end_date: string
@@ -84,7 +85,7 @@ export let globalData: GlobalData | null = null
 let lastFetch = 0
 
 function getCacheTime() {
-    if(process.env.NODE_ENV == 'production') {
+    if (process.env.NODE_ENV == 'production') {
         return 60000
     }
 
@@ -116,7 +117,7 @@ export async function fetchAll() {
         getRange('Docentes!A2:D'),
         getRange('Alumnos!A2:J'),
         getRange('Ex-Alumnos!A2:E'),
-        getRange('Eventos!A2:E'),
+        getRange('Eventos!A2:F'),
     ])
 
     const guests = guestsData.values!.map(([first_name, surname, dni_cuil, invited_by, event_id, timestamp]) => ({
@@ -128,15 +129,15 @@ export async function fetchAll() {
         timestamp,
     }) as Guest)
 
-    const staffs = staffsData.values?.map(([username, name, email, dni_cuil]) => ({
-        username: username.toLowerCase().trim(),
+    const staffs = (staffsData.values?.map(([username, name, email, dni_cuil]) => ({
+        username: username?.toLowerCase().trim(),
         name,
         email,
         dni_cuil,
-    }) as Staff) ?? []
+    }) as Staff) ?? []).filter(student => student.username)
 
-    const students = studentsData.values?.map(([enrolment, course, name, dni_cuil, mother_name, father_name, mother_email, father_email, mother_dni_cuil, father_dni_cuil]) => ({
-        enrolment: enrolment.toLowerCase().trim(),
+    const students = (studentsData.values?.map(([enrolment, course, name, dni_cuil, mother_name, father_name, mother_email, father_email, mother_dni_cuil, father_dni_cuil]) => ({
+        enrolment: enrolment?.toLowerCase().trim(),
         course,
         name,
         dni_cuil,
@@ -146,23 +147,28 @@ export async function fetchAll() {
         father_email,
         mother_dni_cuil,
         father_dni_cuil,
-    }) as Student) ?? []
+    }) as Student) ?? []).filter(student => student.enrolment)
 
-    const formerStudents = formerStudentsData.values?.map(([enrolment, year, name, dni_cuil, email]) => ({
-        enrolment: enrolment.toLowerCase().trim(),
+    const formerStudents = (formerStudentsData.values?.map(([year, enrolment, name, dni_cuil, email]) => ({
+        enrolment: enrolment?.toLowerCase().trim(),
         year,
         name,
         dni_cuil,
         email,
-    }) as FormerStudent) ?? []
+    }) as FormerStudent) ?? []).filter(student => student.enrolment)
 
-    const events = eventsData.values?.map(([name, id, description, start_date, end_date]) => ({
-        name,
-        id,
-        description,
-        start_date,
-        end_date,
-    }) as Event) ?? []
+    const events = (eventsData.values?.map(([name, id, description, former_students_invited, start_date, end_date]) => {
+        former_students_invited = former_students_invited?.toLowerCase().trim()
+
+        return ({
+            name,
+            id,
+            description,
+            former_students_invited: former_students_invited === 'si' || former_students_invited === 'sí' || former_students_invited === 'x' || former_students_invited === 'y' || former_students_invited === 'yes' || former_students_invited === 'true',
+            start_date,
+            end_date,
+        })as Event
+    }) ?? []).filter(event => event.id && event.name)
 
     const studentsParents: StudentParent[] = []
 
@@ -196,7 +202,13 @@ export async function fetchAll() {
         }).filter((d): d is Identity => d !== null),
         ...staffs.map(identityFromStaff),
         ...students.map(identityFromStudent),
-        ...formerStudents.map(identityFromFormerStudent),
+        ...formerStudents.map((s) => {
+            try {
+                return identityFromFormerStudent(s)
+            } catch (error) {
+                return null
+            }
+        }).filter((d): d is Identity => d !== null),
         ...studentsParents.map((s) => {
             try {
                 return identityFromStudentParent(s)
@@ -426,7 +438,7 @@ export function cuildFromIdSafe(id: string) {
 }
 
 export function cuilFromId(id: string): Cuil {
-    id = id.trim()
+    id = id.trim().replaceAll('.', '').replaceAll('-', '')
 
 
 

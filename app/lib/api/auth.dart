@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ethf_access_control_app/api/api.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_keychain/flutter_keychain.dart';
 
@@ -42,7 +43,9 @@ class AuthHandler {
         return SessionStatus.authenticated;
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
 
       return SessionStatus.unknown;
     }

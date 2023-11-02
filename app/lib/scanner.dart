@@ -1,4 +1,5 @@
 import 'package:ethf_access_control_app/person_info.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 
@@ -29,7 +30,9 @@ class Scanner extends StatelessWidget {
                 PersonInfo? personInfo;
                 try {
                   personInfo = PersonInfo.parse(text);
-                  print(personInfo);
+                  if (kDebugMode) {
+                    print(personInfo);
+                  }
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

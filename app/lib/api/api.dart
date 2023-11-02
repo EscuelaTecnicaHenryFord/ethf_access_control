@@ -28,14 +28,26 @@ class AppApi {
     return RemotePerson.fromJson(data);
   }
 
-  Future<List<RemotePerson>> fetchIdentities() {
-    return jsonGet('/api/identities').then((data) {
-      if (data == null) {
-        return [];
-      }
+  Future<List<RemotePerson>> fetchIdentities() async {
+    final data = await jsonGet('/api/identities');
+    if (data == null) {
+      return [];
+    }
 
-      return (data as List).map((e) => RemotePerson.fromJson(e)).toList();
-    });
+    return (data as List)
+        .map((e) {
+          try {
+            return RemotePerson.fromJson(e);
+          } catch (err) {
+            if (kDebugMode) {
+              print("Error with: $e, $err");
+            }
+            return null;
+          }
+        })
+        .where((element) => element != null)
+        .map((e) => e!)
+        .toList();
   }
 
   Future<RemotePerson?> fetchGuestIdentity(String id, String event) async {
@@ -154,6 +166,7 @@ class Event {
   final String id;
   final String name;
   final String description;
+  final bool formerStudentsInvited;
   final DateTime startDate;
   final DateTime endDate;
   final bool isCurrent;
@@ -165,13 +178,17 @@ class Event {
     required this.startDate,
     required this.endDate,
     this.isCurrent = false,
+    this.formerStudentsInvited = false,
   });
 
   factory Event.fromJson(Map<String, dynamic> json, [isCurrent = false]) {
+    print(json);
+
     return Event(
       id: json['id'],
       name: json['name'],
       description: json['description'],
+      formerStudentsInvited: json['former_students_invited'] ?? false,
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
       isCurrent: isCurrent,

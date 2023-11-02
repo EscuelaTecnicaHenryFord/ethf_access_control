@@ -75,7 +75,7 @@ class RemotePerson {
       type = PersonType.staff;
     } else if (json['type'] == 'parent') {
       type = PersonType.parent;
-    } else if (json['type'] == 'former_student') {
+    } else if (json['type'] == 'former-student' || json['type'] == 'former_student') {
       type = PersonType.formerStudent;
     }
 
@@ -104,5 +104,10 @@ class RemotePerson {
       'events': events,
       'type': type.toString(),
     };
+  }
+
+  @override
+  String toString() {
+    return 'RemotePerson{id: $id, name: $name, username: $username, dni: $dni, invitedBy: $invitedBy, cuilPrefix: $cuilPrefix, cuilSufix: $cuilSufix, events: $events, type: $type}';
   }
 }

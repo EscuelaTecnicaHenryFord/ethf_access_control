@@ -12,8 +12,6 @@ export async function GET(request: Request) {
     const eventId = url.searchParams.get('event')?.toLowerCase()
     const forceCurrentEvent = url.searchParams.get('force_current_event')?.toLowerCase() === 'true'
 
-    console.log(id)
-
     const data = await getGlobalData()
 
     let identity = data.getIdentity(id)
