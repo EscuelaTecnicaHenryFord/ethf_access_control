@@ -9,7 +9,7 @@ export const appRouter = router({
     verifyStudentData: publicProcedure.input(studentDataSchema).query(async ({ ctx, input }) => {
         const data = await getGlobalData();
 
-        const studentIdentity = data.getIdentity(input.studentDNI);
+        const studentIdentity = data.getIdentity(input.studentDNI.replaceAll('.', ''));
 
         if (!studentIdentity) {
             throw new TRPCError({
