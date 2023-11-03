@@ -68,7 +68,6 @@ export default function AddGuestFormDialog(props: {
         } catch (error) {
             if (error instanceof TRPCClientError) {
                 console.error(error)
-                alert(error)
             }
         } finally {
             setLoading(false)
