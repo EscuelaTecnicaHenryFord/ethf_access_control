@@ -34,6 +34,7 @@ export default function Home() {
         setFormSection(2)
       }} />}
       {formSection === 2 && <FormVerifyParentsData studentData={studentData} onVerificationCompleted={(v) => {
+        setVerificationData(v)
         setFormSection(3)
       }} />}
       {formSection === 3 && <ManageGuests studentData={studentData} verificationData={verificationData} />}

@@ -40,6 +40,7 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
             const result = await client.verifyStudentData.query(values)
             props.onStudentVerified(result)
         } catch (error) {
+            console.error(error)
             if (error instanceof TRPCClientError) {
                 const code = error.data?.code
 
