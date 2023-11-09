@@ -60,7 +60,9 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 md:grid grid-cols-2 pt-10">
                 <div className="col-span-2">
                     <h2 className="font-medium text-lg">Invitaciones expo 2023</h2>
-                    <p className="mt-2">Este formulario está dirigido a los padres de alumnos actuales del colegio para que puedan registrar invitados.</p>
+                    <p className="mt-2">
+                        Este formulario está dirigido a los padres de alumnos actuales del colegio para que puedan registrar invitados.
+                    </p>
                 </div>
                 <div className="col-span-2">
                     <h3 className="font-medium text-lg">Paso 1: verificar datos del estudiante</h3>
@@ -71,9 +73,9 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
                     name="studentDNI"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>DNI estudiante</FormLabel>
+                            <FormLabel>DNI del estudiante o ingresante</FormLabel>
                             <FormControl>
-                                <Input placeholder="99.999.999" {...field} />
+                                <Input placeholder="..." {...field} />
                             </FormControl>
                             {/* <FormDescription>
                                 DNI del estudiante
@@ -89,8 +91,11 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
                         <FormItem>
                             <FormLabel>Matrícula el estudiante</FormLabel>
                             <FormControl>
-                                <Input placeholder="HF9999 o I099" {...field} />
+                                <Input placeholder="..." {...field} />
                             </FormControl>
+                            <FormDescription>
+                                Ingresantes a primer año 2024 utilizar el número de inscripcion de ingreso
+                            </FormDescription>
                             {/* <FormDescription>
                                 Matricula del estudiante
                             </FormDescription> */}

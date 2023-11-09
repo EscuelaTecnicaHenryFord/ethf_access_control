@@ -1,6 +1,7 @@
 import { getRange } from "./spreadsheet";
 import * as EmailValidator from 'email-validator';
 import dayjs from 'dayjs'
+import { enrolmentRegex } from "./client";
 
 export type Guest = {
     first_name: string

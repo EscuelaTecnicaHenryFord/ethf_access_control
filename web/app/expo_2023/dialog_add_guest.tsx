@@ -34,7 +34,8 @@ import { TRPCClientError } from "@trpc/client"
 
 export default function AddGuestFormDialog(props: {
     onGuestAdded: (guest: AppRouterOutputs['addGuest']) => unknown,
-    verificationData: z.infer<typeof verificationDataSchema>
+    verificationData: z.infer<typeof verificationDataSchema>,
+    children: React.ReactNode
 }) {
     const form = useForm<z.infer<typeof addGuestSchema>>({
         resolver: zodResolver(addGuestSchema),
@@ -52,6 +53,16 @@ export default function AddGuestFormDialog(props: {
     async function onSubmit(values: z.infer<typeof addGuestSchema>) {
         try {
             setLoading(true)
+            
+            if(!values.requires_vehicle_access) {
+                values['vehicle_brand_model'] = ''
+                values['vehicle_licence_plate'] = ''
+                values['driver_name'] = ''
+                values['driver_id'] = ''
+                values['driver_license_number'] = ''
+                values['vehicle_insurance'] = '' 
+            }
+            
             const result = await client.addGuest.mutate({
                 verificationData: props.verificationData!,
                 guestData: values,
@@ -63,10 +74,18 @@ export default function AddGuestFormDialog(props: {
             form.setValue("last_name", "")
             form.setValue("is_under_age", false)
             form.setValue("requires_vehicle_access", false)
+            form.setValue("vehicle_brand_model", "")
+            form.setValue("vehicle_licence_plate", "")
+            form.setValue("driver_name", "")
+            form.setValue("driver_id", "")
+            form.setValue("driver_license_number", "")
+            form.setValue("vehicle_insurance", "")
+
             props.onGuestAdded(result)
         } catch (error) {
             if (error instanceof TRPCClientError) {
                 console.error(error)
+                alert(error.message)
             }
         } finally {
             setLoading(false)
@@ -77,7 +96,7 @@ export default function AddGuestFormDialog(props: {
 
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" id="close">Agregar invitado</Button>
+                {props.children}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
                 <Form {...form}>
@@ -152,7 +171,12 @@ export default function AddGuestFormDialog(props: {
                                 )}
                             />
 
-
+                            {form.getValues('is_under_age') && <div className="pl-[20%]">
+                                <p className="my-2 text-sm font-medium text-red-500">
+                                    Todo menor que ingrese a la escuela debera circular en todo momento
+                                    acompañado y cuidado por el adulto responsable con quien ingresa.
+                                </p>
+                            </div>}
 
                             <FormField
                                 control={form.control}

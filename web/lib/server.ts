@@ -1,5 +1,5 @@
 import { TRPCError, inferRouterInputs, inferRouterOutputs } from "@trpc/server";
-import { enrolmentRegex, studentDataSchema, parentDataVerificationSchema, verificationDataSchema, addGuestSchema } from "./client";
+import { enrolmentRegex, studentDataSchema, parentDataVerificationSchema, verificationDataSchema, addGuestSchema, getEnrolment } from "./client";
 import { Student, cuildFromIdSafe, fetchAll, getGlobalData } from "./data";
 import { publicProcedure, router } from "./trpc";
 import z from "zod";
@@ -19,8 +19,8 @@ export const appRouter = router({
 
         const student = studentIdentity?.ref[0] as Student | undefined
 
-        const enrolmentInput = input.studentEnrolment.match(enrolmentRegex)?.[2].toLowerCase();
-        const studentEnrolment = student?.enrolment.match(enrolmentRegex)?.[2];
+        const enrolmentInput = getEnrolment(input.studentEnrolment)
+        const studentEnrolment = student?.enrolment && getEnrolment(student.enrolment)
 
         if (enrolmentInput !== studentEnrolment) {
             throw new TRPCError({

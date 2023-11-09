@@ -19,11 +19,19 @@ const dniErrorOptions = {
 }
 
 const enrolmentErrorOptions = {
-    message: "Ingrese una matrícula válida",
+    message: "Ingrese una valor válido.",
 }
 
-export const enrolmentRegex = /^(hf|HF|Hf|hF)?(\d{4}|([iI]\d{3}))$/
+export const enrolmentRegex = /^((hf|HF|Hf|hF)?(\d{4}))|^([Ii]{0,1}(\d{1,3}))$/
 export const dniRegex = /^\d{1,2}\.?\d{3}\.?\d{3}$/
+
+export function getEnrolment(enrolment: string) {
+    const match = enrolmentRegex.exec(enrolment)
+    if (!match) return null
+    if (match[5]) return 'I' + parseInt(match[5]).toString().padStart(3, '0')
+    return 'HF' + match[3]
+}
+
 
 export const studentDataSchema = z.object({
     studentDNI: z.string().regex(dniRegex, dniErrorOptions),

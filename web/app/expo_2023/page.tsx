@@ -10,6 +10,7 @@ import { FormVerifyStudentData } from "./forme_page_1"
 import { AppRouterOutputs } from "@/lib/server"
 import { FormVerifyParentsData } from "./forme_page_2"
 import { ManageGuests } from "./forme_page_3"
+import Link from "next/link"
 
 export default function Home() {
   // const session = await getSession()
@@ -38,5 +39,14 @@ export default function Home() {
         setFormSection(3)
       }} />}
       {formSection === 3 && <ManageGuests studentData={studentData} verificationData={verificationData} />}
-    </div></>
+      <hr className="mt-10 mb-4" />
+      <p className="font-medium">Formulario de uso exclusivo para la familia de estudiantes de 1° a 7° año de la escuela en 2023 y para ingresantes a primer año 2024.</p>
+      <p className="font-medium mt-4">
+       Los padres y madres de los estudiantes ya están registrados y no necesitan agregarse como invitados.
+      </p>
+      <p className="font-medium mt-4">
+        Más información en <Link className="hover:underline active:underline text-blue-500" href="https://www.henryford.edu.ar/expo_2023">www.henryford.edu.ar/expo_2023</Link>
+      </p>
+    </div>
+  </>
 }
