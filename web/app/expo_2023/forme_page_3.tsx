@@ -25,8 +25,6 @@ export function ManageGuests(props: { studentData: AppRouterOutputs['verifyStude
     }, [])
 
     async function getGuests() {
-        console.log(props.verificationData)
-
         try {
             const result = await client.getGuests.query({
                 verificationData: props.verificationData!

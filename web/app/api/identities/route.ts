@@ -41,12 +41,6 @@ export async function GET(request: Request) {
         responseData = responseData.filter(identity => identity.type === 'guest')
     }
 
-    for(const id of data.identities) {
-        if(id.name.toLocaleLowerCase().includes('cichero')) {
-            console.log(id)
-        }
-    }
-
     return new Response(JSON.stringify(responseData), {
         headers: { "content-type": "application/json" },
     });

@@ -155,7 +155,7 @@ export async function fetchAll() {
         name,
         dni_cuil,
         email,
-    }) as FormerStudent) ?? []).filter(student => student.enrolment)
+    }) as FormerStudent) ?? []).filter(student => student.enrolment || student.dni_cuil)
 
     const events = (eventsData.values?.map(([name, id, description, former_students_invited, start_date, end_date]) => {
         former_students_invited = former_students_invited?.toLowerCase().trim()
@@ -167,7 +167,7 @@ export async function fetchAll() {
             former_students_invited: former_students_invited === 'si' || former_students_invited === 'sí' || former_students_invited === 'x' || former_students_invited === 'y' || former_students_invited === 'yes' || former_students_invited === 'true',
             start_date,
             end_date,
-        })as Event
+        }) as Event
     }) ?? []).filter(event => event.id && event.name)
 
     const studentsParents: StudentParent[] = []
@@ -344,12 +344,27 @@ function identityFromFormerStudent(formerStudent: FormerStudent): Identity {
     const { cuildata } = cuildFromIdSafe(formerStudent.dni_cuil)
 
     if (!cuildata && !formerStudent.enrolment) {
+        const le_ci = formerStudent.dni_cuil.toLowerCase().trim()
+
+        if (le_ci.startsWith('l.e.') || le_ci.startsWith('c.i.')) {
+            return {
+                ref: [formerStudent],
+                id: le_ci.toUpperCase(),
+                name: formerStudent.name,
+                username: le_ci.toUpperCase(),
+                dni: undefined,
+                cuil_prefix: undefined,
+                cuil_sufix: undefined,
+                type: 'former-student',
+            }
+        }
+
         throw new Error(`Former student ${formerStudent.name} has no enrolment nor CUIL`)
     }
 
     return {
         ref: [formerStudent],
-        id: formerStudent.enrolment,
+        id: formerStudent.enrolment ?? cuildata?.dni,
         name: formerStudent.name,
         username: formerStudent.enrolment,
         dni: cuildata?.dni,

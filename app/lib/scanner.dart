@@ -25,6 +25,7 @@ class Scanner extends StatelessWidget {
               showToggleCamera: false,
               showGallery: false,
               onScan: (result) async {
+                print(result.text);
                 final text = result.text;
                 if (text == null) return;
                 PersonInfo? personInfo;

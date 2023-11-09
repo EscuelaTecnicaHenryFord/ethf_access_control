@@ -51,7 +51,6 @@ export default function AddGuestFormDialog(props: {
 
     async function onSubmit(values: z.infer<typeof addGuestSchema>) {
         try {
-            console.log(props.verificationData)
             setLoading(true)
             const result = await client.addGuest.mutate({
                 verificationData: props.verificationData!,

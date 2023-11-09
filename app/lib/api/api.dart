@@ -19,7 +19,7 @@ class AppApi {
       query['event'] = event;
     }
 
-    final data = await jsonGet('/api/identities/$id', query.isNotEmpty ? query : null);
+    final data = await jsonGet('/api/identities/${Uri.encodeComponent(id)}', query.isNotEmpty ? query : null);
 
     if (data == null) {
       return null;
@@ -51,7 +51,7 @@ class AppApi {
   }
 
   Future<RemotePerson?> fetchGuestIdentity(String id, String event) async {
-    final data = await jsonGet('/api/guests/$id/$event');
+    final data = await jsonGet('/api/guests/${Uri.encodeComponent(id)}/${Uri.encodeComponent(event)}');
 
     if (data == null) {
       return null;
@@ -147,7 +147,7 @@ class AppApi {
 
       return data;
     } else {
-      throw Exception('api_failed');
+      throw Exception('api_failed: ${response.statusCode}');
     }
   }
 

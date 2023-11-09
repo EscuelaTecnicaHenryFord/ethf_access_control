@@ -36,7 +36,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   }
 
   void fetchData() async {
-    remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.cuil);
+    remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.dni);
 
     if (kDebugMode) {
       print("Found: $remotePerson");
@@ -46,7 +46,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     this.events = events;
 
     if (remotePerson?.type == PersonType.guest && currentEvents.isNotEmpty) {
-      final r2 = await AppApi.instance.fetchGuestIdentity(widget.personInfo.cuil, currentEvents.first.id);
+      final r2 = await AppApi.instance.fetchGuestIdentity(widget.personInfo.dni, currentEvents.first.id);
       if (r2 != null) {
         remotePerson = r2;
       }

@@ -3,38 +3,37 @@ import 'package:intl/intl.dart';
 class PersonInfo {
   final String firstName;
   final String lastName;
-  final String gender;
   final String dni;
-  final DateTime dateOfBirth;
-  final String cuilPrefixSufix;
+  final String? scannedString;
 
   PersonInfo({
     required this.firstName,
     required this.lastName,
-    required this.gender,
     required this.dni,
-    required this.dateOfBirth,
-    required this.cuilPrefixSufix,
+    this.scannedString,
   });
 
   static PersonInfo parse(String scanned) {
-    final sections = scanned.split('@');
+    final regex =
+        RegExp(r"^(?<id>\d{10,12})@(?<last_name>[^@]+)@(?<first_name>[^@]+)@[A-Z]@[FM]{0,1}(?<dni>\d{7,9})@.+@.+");
 
-    final dateStrArr = sections[6].split('/');
+    var match = regex.firstMatch(scanned);
 
-    final day = dateStrArr[0];
-    final month = dateStrArr[1];
-    final year = dateStrArr[2];
+    if (match == null) {
+      final altRegex =
+          RegExp(r"^ *@{0,1}(?<dni>\d{7,9}) *@[^@]+@[^@]+@(?<last_name>[^@]+)@(?<first_name>[^@]+)@[A-Z]+@");
+      match = altRegex.firstMatch(scanned);
+    }
 
-    final date = DateTime.parse('$year-$month-$day');
+    if (match == null) {
+      throw Exception("Invalid scanned data");
+    }
 
     return PersonInfo(
-      firstName: sections[2],
-      lastName: sections[1],
-      gender: sections[3],
-      dni: sections[4],
-      dateOfBirth: date,
-      cuilPrefixSufix: sections[8],
+      firstName: match.namedGroup('first_name')!,
+      lastName: match.namedGroup('last_name')!,
+      dni: match.namedGroup('dni')!,
+      scannedString: scanned,
     );
   }
 
@@ -43,22 +42,14 @@ class PersonInfo {
       'first_name': firstName,
       'last_name': lastName,
       'dni': dni,
-      'date_of_birth': dateOfBirth.toIso8601String(),
-      'cuil_prefix_sufix': cuilPrefixSufix,
+      'scanned_string': scannedString,
     };
   }
 
   String get displayName => toBeginningOfSentenceCase("$firstName $lastName")!;
 
-  String get cuil {
-    final prefix = cuilPrefixSufix.substring(0, 2);
-    final sufix = cuilPrefixSufix.substring(2);
-
-    return "$prefix-$dni-$sufix";
-  }
-
   @override
   String toString() {
-    return "$firstName $lastName, $gender, $dni, $dateOfBirth";
+    return "$firstName $lastName,  $dni";
   }
 }
