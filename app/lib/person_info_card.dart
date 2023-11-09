@@ -183,7 +183,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    "Registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
+                    "Persona registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
