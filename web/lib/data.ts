@@ -218,15 +218,21 @@ export async function fetchAll() {
         }).filter((d): d is Identity => d !== null),
     ]
 
-    const identities_by_dni = new Map<number, Identity[]>()
+    const identities_by_dni = new Map<number, Identity>()
     const identitie_by_cuil = new Map<string, Identity>()
     const identities_by_username = new Map<string, Identity>()
 
     for (const identity of allIdentitys) {
         if (identity.dni) {
-            const identities = identities_by_dni.get(identity.dni) || []
-            identities.push(identity)
-            identities_by_dni.set(identity.dni, identities)
+            const duplicatedIdentity = identities_by_dni.get(identity.dni)
+
+            for (const key in duplicatedIdentity) {
+                if (!(key in identity)) {
+                    (identity as any)[key] = (duplicatedIdentity as any)[key]
+                }
+            }
+
+            identities_by_dni.set(identity.dni, identity)
         }
 
         if (identity.cuil_prefix && identity.cuil_sufix) {
@@ -275,19 +281,16 @@ export async function fetchAll() {
 
             if (id) return id
 
-            const ids = identities_by_dni.get(cuild.cuildata!.dni) ?? []
+            const id_by_dni = identities_by_dni.get(cuild.cuildata!.dni)
 
-            for (const id of ids) {
-                if (id.cuil_prefix == cuild.cuildata!.prefix && id.cuil_sufix == cuild.cuildata!.sufix && id.dni === cuild.cuildata?.dni) return id
-            }
+            if (id_by_dni && id_by_dni.cuil_prefix == cuild.cuildata!.prefix && id_by_dni.cuil_sufix == cuild.cuildata!.sufix && id_by_dni.dni === cuild.cuildata?.dni) return id
 
-            for (const id of ids) {
-                if ((!id.cuil_prefix || id.cuil_prefix == 0 || !id.cuil_sufix || id.cuil_sufix == 0) && id.dni === cuild.cuildata?.dni) return id
-            }
+
+            if (id_by_dni && (!id_by_dni.cuil_prefix || id_by_dni.cuil_prefix == 0 || !id_by_dni.cuil_sufix || id_by_dni.cuil_sufix == 0) && id_by_dni.dni === cuild.cuildata?.dni) return id
         }
 
         if (cuild.valid && !cuild.cuildata!.full) {
-            const id = identities_by_dni.get(cuild.cuildata!.dni)?.[0]
+            const id = identities_by_dni.get(cuild.cuildata!.dni)
 
             if (id) return id
         }

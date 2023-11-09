@@ -22,7 +22,7 @@ const enrolmentErrorOptions = {
     message: "Ingrese una matrícula válida",
 }
 
-export const enrolmentRegex = /^(hf|HF|Hf|hF)?(\d{4})$/
+export const enrolmentRegex = /^(hf|HF|Hf|hF)?(\d{4}|([iI]\d{3}))$/
 export const dniRegex = /^\d{1,2}\.?\d{3}\.?\d{3}$/
 
 export const studentDataSchema = z.object({

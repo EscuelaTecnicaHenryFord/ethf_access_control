@@ -19,7 +19,7 @@ export const appRouter = router({
 
         const student = studentIdentity?.ref[0] as Student | undefined
 
-        const enrolmentInput = input.studentEnrolment.match(enrolmentRegex)?.[2];
+        const enrolmentInput = input.studentEnrolment.match(enrolmentRegex)?.[2].toLowerCase();
         const studentEnrolment = student?.enrolment.match(enrolmentRegex)?.[2];
 
         if (enrolmentInput !== studentEnrolment) {

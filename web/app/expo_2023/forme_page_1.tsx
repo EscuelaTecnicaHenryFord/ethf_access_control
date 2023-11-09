@@ -89,7 +89,7 @@ export function FormVerifyStudentData(props: { onStudentVerified: (student: AppR
                         <FormItem>
                             <FormLabel>Matrícula el estudiante</FormLabel>
                             <FormControl>
-                                <Input placeholder="HF9999" {...field} />
+                                <Input placeholder="HF9999 o I099" {...field} />
                             </FormControl>
                             {/* <FormDescription>
                                 Matricula del estudiante
