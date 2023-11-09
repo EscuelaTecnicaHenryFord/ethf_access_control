@@ -176,13 +176,25 @@ export const appRouter = router({
             })
         }
 
-        await appendTo('Invitados!A2:F', [[
-            input.guestData.first_name,
-            input.guestData.last_name,
-            inputCuilData.cuildata!.dni,
+        const { guestData: {
+            first_name,
+            last_name,
+            dni,
+            ...extra_data
+        } } = input
+
+        const extraFields = Object.entries(extra_data).map(([key, value]) => {
+            return `${key}: ${value}`
+        })
+
+        await appendTo('Invitados!A2:Z', [[
+            first_name,
+            last_name,
+            dni,
             "HF" + input.verificationData.student_enrolment,
             'expo_2023',
-            new Date,
+            new Date(),
+            ...extraFields,
         ]])
 
         await fetchAll()

@@ -43,7 +43,7 @@ export default function AddGuestFormDialog(props: {
             first_name: "",
             last_name: "",
             is_under_age: false,
-            requires_assistant: false,
+            requires_vehicle_access: false,
         },
     })
 
@@ -62,7 +62,7 @@ export default function AddGuestFormDialog(props: {
             form.setValue("first_name", "")
             form.setValue("last_name", "")
             form.setValue("is_under_age", false)
-            form.setValue("requires_assistant", false)
+            form.setValue("requires_vehicle_access", false)
             props.onGuestAdded(result)
         } catch (error) {
             if (error instanceof TRPCClientError) {
@@ -156,7 +156,7 @@ export default function AddGuestFormDialog(props: {
 
                             <FormField
                                 control={form.control}
-                                name="requires_assistant"
+                                name="requires_vehicle_access"
                                 render={({ field }) => (
                                     <FormItem className="grid grid-cols-4 items-center gap-4">
                                         <div className="ml-auto pt-3">
@@ -181,6 +181,93 @@ export default function AddGuestFormDialog(props: {
 
 
                         </div>
+                        {form.getValues('requires_vehicle_access') && <>
+
+                            <FormField
+                                control={form.control}
+                                name="vehicle_brand_model"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">Model y marca del vehiculo</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="vehicle_licence_plate"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">Patente del vehiculo</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+
+
+                            <FormField
+                                control={form.control}
+                                name="driver_name"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">Nombre del conductor</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="driver_id"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">DNI del conductor</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="driver_license_number"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">Número de registro de conducir</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="vehicle_insurance"
+                                render={({ field }) => (
+                                    <FormItem className="grid grid-cols-4 items-center gap-4">
+                                        <FormLabel className="text-right">Número de póliza de seguro</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="" {...field} className="col-span-3" />
+                                        </FormControl>
+                                        <FormMessage className="col-span-4" />
+                                    </FormItem>
+                                )}
+                            />
+                        </>}
                         <DialogFooter className="mt-4">
                             {loading ? <Button type="submit" disabled> <Loader2 className="animate-spin" /> <span className="ml-2">Guardar</span></Button> : <Button type="submit">Guardar</Button>}
                         </DialogFooter>

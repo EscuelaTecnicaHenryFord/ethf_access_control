@@ -47,5 +47,11 @@ export const addGuestSchema = z.object({
     first_name: z.string().min(3).max(100),
     last_name: z.string().min(3).max(100),
     is_under_age: z.boolean(),
-    requires_assistant: z.boolean(),
+    requires_vehicle_access: z.boolean(),
+    vehicle_brand_model: z.string().optional(),
+    vehicle_licence_plate: z.string().optional(),
+    driver_name: z.string().optional(),
+    driver_id: z.string().optional(),
+    driver_license_number: z.string().optional(),
+    vehicle_insurance: z.string().optional(),
 })
