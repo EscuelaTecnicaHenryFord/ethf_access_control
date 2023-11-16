@@ -80,7 +80,7 @@ class RemotePerson {
     }
 
     return RemotePerson(
-      id: json['id'],
+      id: json['id'] ?? json['username'],
       name: json['name'],
       username: json['username'],
       dni: json['dni'],

@@ -1,3 +1,4 @@
+import 'package:ethf_access_control_app/add_guest_screen.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
@@ -83,7 +84,15 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     }
   }
 
-  void handleRegisterNewPerson() async {}
+  void handleRegisterNewPerson() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => AddGuestScreen(personInfo: widget.personInfo, registerNow: true)))
+        .then((value) {
+      if (value == true) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
 
   bool isInvitedToCurrentEvent() {
     if (remotePerson == null) return false;
@@ -219,7 +228,7 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
                   handleRegisterAttendance();
                 } else if (index == 1 && !loading && remotePerson != null && isAlreadyIn) {
                   Navigator.of(context).pop();
-                } else if (index == 1 && !loading && remotePerson == null) {
+                } else if (index == 1 && !loading && !isInvitedToCurrentEvent()) {
                   handleRegisterNewPerson();
                 }
               },

@@ -97,6 +97,10 @@ class AppApi {
     });
   }
 
+  Future<void> postAddGuest(dynamic data) async {
+    await jsonPost('/api/guests/new', data);
+  }
+
   Future<List<HistoryEntry>> fetchHistory() async {
     final data = await jsonGet('/api/history');
 

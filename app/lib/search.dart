@@ -2,14 +2,31 @@ import 'package:diacritic/diacritic.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/person_page.dart';
+import 'package:ethf_access_control_app/scan_dni_dialog.dart';
 import 'package:flutter/material.dart';
 
 class GlobalSearch extends SearchDelegate {
+  GlobalSearch({
+    this.onResultTap,
+  });
+
   final future = AppApi.instance.fetchIdentities();
+
+  final Function(RemotePerson person)? onResultTap;
 
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
+      IconButton(
+        icon: const Icon(Icons.qr_code_scanner_rounded),
+        onPressed: () {
+          showScanDniDialog(context).then((person) {
+            if (person != null) {
+              query = "${person.displayName} ${person.dni}";
+            }
+          });
+        },
+      ),
       IconButton(
         icon: const Icon(Icons.clear),
         onPressed: () {
@@ -31,22 +48,32 @@ class GlobalSearch extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    return SearchResults(future: future, filter: query);
+    return SearchResults(
+      future: future,
+      filter: query,
+      onResultTap: onResultTap,
+    );
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
     // This method is called everytime the search term changes.
     // If you want to add search suggestions as the user enters their search term, this is the place to do that.
-    return SearchResults(future: future, filter: query);
+    return SearchResults(
+      future: future,
+      filter: query,
+      onResultTap: onResultTap,
+    );
   }
 }
 
 class SearchResults extends StatelessWidget {
-  const SearchResults({super.key, required this.future, required this.filter});
+  const SearchResults({super.key, required this.future, required this.filter, this.onResultTap});
 
   final Future<List<RemotePerson>> future;
   final String filter;
+
+  final Function(RemotePerson person)? onResultTap;
 
   List<RemotePerson> filterList(List<RemotePerson> people) {
     String trans(String s) {
@@ -110,7 +137,15 @@ class SearchResults extends StatelessWidget {
               title: Text(list[index].name),
               subtitle: Text(
                   "${list[index].id == '' ? list[index].dni.toString() : list[index].id} - ${list[index].typeName}"),
-              onTap: () => showPersonPage(context, list[index]),
+              onTap: () {
+                if (onResultTap != null) {
+                  onResultTap!(list[index]);
+                  Navigator.of(context).pop();
+                  return;
+                }
+
+                showPersonPage(context, list[index]);
+              },
             );
           },
         );

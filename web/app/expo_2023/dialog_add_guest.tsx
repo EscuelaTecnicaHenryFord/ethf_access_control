@@ -212,7 +212,7 @@ export default function AddGuestFormDialog(props: {
                                 name="vehicle_brand_model"
                                 render={({ field }) => (
                                     <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Model y marca del vehiculo</FormLabel>
+                                        <FormLabel className="text-right">Modelo y marca del vehiculo</FormLabel>
                                         <FormControl>
                                             <Input placeholder="" {...field} className="col-span-3" />
                                         </FormControl>
