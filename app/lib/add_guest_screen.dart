@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/person_info.dart';

@@ -1,3 +1,4 @@
+import 'package:ethf_access_control_app/add_guest_screen.dart';
 import 'package:ethf_access_control_app/auth_wrapper.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/history_screen.dart';
@@ -133,6 +134,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           HistoryScreen(),
         ]),
       ),
+      floatingActionButton: controller.index == 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddGuestScreen()));
+              },
+              icon: const Icon(Icons.person_add_rounded),
+              label: const Text("Agregar invitado"))
+          : null,
     );
   }
 }
