@@ -65,10 +65,14 @@ export function FormVerifyParentsData(props: { studentData: AppRouterOutputs['ve
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 md:grid grid-cols-2 pt-10">
                 <div className="col-span-2">
                     <h2 className="font-medium text-lg">Invitaciones expo 2023</h2>
-                    <p className="mt-2">Verificar información de los padres de {props.studentData?.student_name}</p>
+                    <p className="mt-2 text-lg">Verificar información de los padres de
+                        <br className="sm:hidden"/>
+                        <span className="bg-blue-500 text-white font-medium my-1 py-1 mx-[-2px] px-1 rounded-md">{props.studentData?.student_name}</span>
+                    </p>
                 </div>
                 <div className="col-span-2">
                     <h3 className="font-medium text-lg">Paso 2: verificar datos de los padres</h3>
+                    <p className="mt-2 text-blue-500 font-medium">Completar alguno de los siguientes</p>
                 </div>
 
                 {props.studentData?.father_name && <FormField
