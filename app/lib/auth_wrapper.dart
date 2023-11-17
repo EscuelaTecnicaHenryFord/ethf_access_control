@@ -80,6 +80,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void dispose() {
     _sub.cancel();
+    _subIos.cancel();
     super.dispose();
   }
 
