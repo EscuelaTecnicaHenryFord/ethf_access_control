@@ -59,7 +59,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void dispose() {
     _sub.cancel();
-    _sub.cancel();
     super.dispose();
   }
 
