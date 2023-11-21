@@ -2,6 +2,7 @@ import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
+import 'dart:io' show Platform;
 
 class Scanner extends StatelessWidget {
   const Scanner({
@@ -15,6 +16,7 @@ class Scanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isIOS = Platform.isIOS;
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
@@ -24,8 +26,11 @@ class Scanner extends StatelessWidget {
               showFlashlight: false,
               showToggleCamera: false,
               showGallery: false,
+              tryHarder: isIOS ? true : false,
+              cropPercent: isIOS ? 0.3 : 0.5,
+              resolution: isIOS ? ResolutionPreset.max : ResolutionPreset.high,
+              scanDelay: Duration(milliseconds: isIOS ? 100 : 1000),
               onScan: (result) async {
-                print(result.text);
                 final text = result.text;
                 if (text == null) return;
                 PersonInfo? personInfo;

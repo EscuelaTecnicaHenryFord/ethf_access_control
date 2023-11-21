@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:app_links/app_links.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/auth.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,8 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   late StreamSubscription _sub;
+  late StreamSubscription _subIos;
+  final _appLinks = AppLinks();
 
   SessionStatus status = SessionStatus.unknown;
 
@@ -46,6 +50,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
       handleIntent(intent);
     }, onError: (err) {
       // Handle exception
+    });
+
+    _subIos = _appLinks.allUriLinkStream.listen((uri) {
+      if (!Platform.isIOS) return;
+      handleIntentUri(uri);
     });
   }
 
@@ -71,6 +80,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void dispose() {
     _sub.cancel();
+    _subIos.cancel();
     super.dispose();
   }
 
@@ -88,6 +98,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     final url = Uri.parse(data);
 
+    handleIntentUri(url);
+  }
+
+  void handleIntentUri(Uri url) async {
     final cookie = url.queryParameters['cookie'];
 
     if (cookie == null) return;

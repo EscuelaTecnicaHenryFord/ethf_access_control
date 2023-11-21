@@ -4,6 +4,7 @@ import 'package:ethf_access_control_app/api/auth.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io' show Platform;
 
 class AppApi {
   AppApi._();
@@ -159,7 +160,7 @@ class AppApi {
 }
 
 String get baseUrl {
-  if (kDebugMode) {
+  if (kDebugMode && !Platform.isIOS) {
     return 'http://10.0.31.28:3000';
   }
 
