@@ -1,13 +1,9 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:app_links/app_links.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:receive_intent/receive_intent.dart' as receive_intent;
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({
@@ -25,7 +21,6 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   late StreamSubscription _sub;
-  late StreamSubscription _subIos;
   final _appLinks = AppLinks();
 
   SessionStatus status = SessionStatus.unknown;
@@ -36,24 +31,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     });
   }
 
-  Future<void> _initReceiveIntent() async {
-    try {
-      final receivedIntent = await receive_intent.ReceiveIntent.getInitialIntent();
-      handleIntent(receivedIntent);
-    } on PlatformException {
-      // Handle exception
-    }
-  }
-
   Future<void> _initReceiveIntentit() async {
-    _sub = receive_intent.ReceiveIntent.receivedIntentStream.listen((receive_intent.Intent? intent) {
-      handleIntent(intent);
-    }, onError: (err) {
-      // Handle exception
-    });
-
-    _subIos = _appLinks.allUriLinkStream.listen((uri) {
-      if (!Platform.isIOS) return;
+    _sub = _appLinks.allUriLinkStream.listen((uri) {
       handleIntentUri(uri);
     });
   }
@@ -80,25 +59,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void dispose() {
     _sub.cancel();
-    _subIos.cancel();
+    _sub.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
-    _initReceiveIntent();
     _initReceiveIntentit();
     _initialAuthCheck();
     super.initState();
-  }
-
-  void handleIntent(receive_intent.Intent? intent) async {
-    final data = intent?.data;
-    if (data == null) return;
-
-    final url = Uri.parse(data);
-
-    handleIntentUri(url);
   }
 
   void handleIntentUri(Uri url) async {
