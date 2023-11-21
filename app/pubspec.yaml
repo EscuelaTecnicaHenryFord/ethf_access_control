@@ -14,17 +14,19 @@ dependencies:
 
 
   cupertino_icons: ^1.0.2
-  flutter_zxing: ^1.4.1
+  # flutter_zxing: ^1.4.1
   intl: ^0.18.1
   bottom_sheet: ^4.0.0
   http: ^1.1.0
-  receive_intent: ^0.2.4
   flutter_inappwebview: ^5.8.0
   flutter_keychain: ^2.4.0
   pretty_json: ^2.0.0
   diacritic: ^0.1.4
   pull_to_refresh: ^2.0.0
   app_links: ^3.4.5
+  win32_registry: ^1.1.2
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.1
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,9 @@ import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'dart:io';
+import 'package:win32_registry/win32_registry.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({
@@ -66,6 +69,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     _initReceiveIntentit();
     _initialAuthCheck();
+    if (Platform.isWindows) {
+      registerOnWindows();
+    }
     super.initState();
   }
 
@@ -83,6 +89,29 @@ class _AuthWrapperState extends State<AuthWrapper> {
     setState(() {
       this.status = status;
     });
+  }
+
+  void registerOnWindows() {
+    const scheme = 'ethf-access-control';
+
+    String appPath = Platform.resolvedExecutable;
+
+    String protocolRegKey = 'Software\\Classes\\$scheme';
+    RegistryValue protocolRegValue = const RegistryValue(
+      'URL Protocol',
+      RegistryValueType.string,
+      '',
+    );
+    String protocolCmdRegKey = 'shell\\open\\command';
+    RegistryValue protocolCmdRegValue = RegistryValue(
+      '',
+      RegistryValueType.string,
+      '"$appPath" "%1"',
+    );
+
+    final regKey = Registry.currentUser.createKey(protocolRegKey);
+    regKey.createValue(protocolRegValue);
+    regKey.createKey(protocolCmdRegKey).createValue(protocolCmdRegValue);
   }
 
   @override
@@ -112,6 +141,11 @@ class _LoginPageState extends State<LoginPage> {
   ChromeSafariBrowser? browser;
 
   void openLoginBrowser() {
+    if (Platform.isWindows) {
+      launchUrl(Uri.parse("$baseUrl/login/app"));
+      return;
+    }
+
     browser = MyChromeSafariBrowser();
     browser!.open(url: Uri.parse("$baseUrl/login/app"));
   }

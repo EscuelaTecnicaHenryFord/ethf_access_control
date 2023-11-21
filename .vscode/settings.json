@@ -1,4 +1,7 @@
 {
     "dart.lineLength": 120,
-    "cmake.sourceDirectory": "C:/projects/ethf_access_control/app/linux"
+    "cmake.sourceDirectory": "C:/projects/ethf_access_control/app/linux",
+    "files.associations": {
+        "xstring": "cpp"
+    }
 }

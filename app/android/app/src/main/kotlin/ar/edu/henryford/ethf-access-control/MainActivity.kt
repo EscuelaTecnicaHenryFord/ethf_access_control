@@ -1,4 +1,4 @@
-package ar.edu.henryford.ethf_access_control_app
+package ar.edu.henryford.ethf-access-control
 
 import io.flutter.embedding.android.FlutterActivity
 
