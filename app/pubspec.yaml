@@ -28,6 +28,10 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.1
   flutter_zxing: ^1.4.1
+  google_mlkit_barcode_scanning: ^0.10.0
+  flutter_barcode_sdk: ^2.2.6
+  camera: ^0.10.5+5
+  camera_platform_interface: ^2.6.0
 
 dev_dependencies:
   flutter_test:

@@ -22,7 +22,7 @@ class ScanDniDialog extends StatelessWidget {
           children: [
             Positioned.fill(
               child: Scanner(
-                onPersonRead: (person) => Navigator.of(context).pop(person),
+                onPersonRead: (person) async => Navigator.of(context).pop(person),
                 onError: (error) {},
               ),
             ),

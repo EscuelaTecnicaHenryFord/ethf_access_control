@@ -18,7 +18,7 @@ class _ScannerViewState extends State<ScannerView> {
 
   Set<String> scanned = {};
 
-  void showPersonInfo(PersonInfo personInfo) {
+  Future<void> showPersonInfo(PersonInfo personInfo) async {
     if (scanned.contains(personInfo.dni)) return;
 
     setState(() {
@@ -29,7 +29,7 @@ class _ScannerViewState extends State<ScannerView> {
 
     final data = DataProvider.of(context).state;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       builder: (context) {
         return BottomSheet(
@@ -46,9 +46,9 @@ class _ScannerViewState extends State<ScannerView> {
           },
         );
       },
-    ).then((value) {
-      scanned.remove(personInfo.dni);
-    });
+    );
+
+    scanned.remove(personInfo.dni);
   }
 
   void handleError(Exception error) {
