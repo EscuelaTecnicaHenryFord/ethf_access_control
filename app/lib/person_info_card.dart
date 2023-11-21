@@ -139,6 +139,18 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     );
   }
 
+  bool get isGuest => remotePerson?.type == PersonType.guest || remotePerson == null;
+
+  Color color() {
+    if (loading) return Colors.transparent;
+
+    if (!loading && isGuest && !isInvitedToCurrentEvent()) {
+      return Colors.red;
+    } else {
+      return Colors.green;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -146,8 +158,6 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     bool isAlreadyIn = widget.data.registeredGuestsToday.contains(widget.personInfo.dni);
 
     String inviteLabel = 'Registar invitado';
-
-    final isGuest = remotePerson?.type == PersonType.guest || remotePerson == null;
 
     if (currentEvents.length == 1) {
       inviteLabel = 'Registrar invitado a ${currentEvents.first.name}';
@@ -163,58 +173,61 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
       width: double.infinity,
       child: Stack(
         children: [
-          ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 20, right: 20),
-                child: Text(
-                  widget.personInfo.displayName,
-                  style: theme.textTheme.headlineSmall,
-                ),
-              ),
-              if (invitedBy != null && isGuest && isInvitedToCurrentEvent())
+          Container(
+            color: color(),
+            child: ListView(
+              children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.only(left: 20, top: 20, right: 20),
                   child: Text(
-                    "Invitado por ${invitedBy!.name} (${invitedBy!.id} - ${invitedBy!.typeName})",
-                    style: theme.textTheme.bodyMedium,
+                    widget.personInfo.displayName,
+                    style: theme.textTheme.headlineSmall,
                   ),
                 ),
-              if (invitedBy == null && isGuest && isInvitedToCurrentEvent())
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    "Invitado por ${remotePerson!.invitedBy ?? 'desconocido'}.",
-                    style: theme.textTheme.bodyMedium,
+                if (invitedBy != null && isGuest && isInvitedToCurrentEvent())
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Invitado por ${invitedBy!.name} (${invitedBy!.id} - ${invitedBy!.typeName})",
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-              if (remotePerson != null && !isGuest)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    "Persona registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
-                    style: theme.textTheme.bodyMedium,
+                if (invitedBy == null && isGuest && isInvitedToCurrentEvent())
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Invitado por ${remotePerson!.invitedBy ?? 'desconocido'}.",
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-              if (!loading && isGuest && !isInvitedToCurrentEvent())
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    notInvitedLabel,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red),
+                if (remotePerson != null && !isGuest)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Persona registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-              if (!loading && !isInvitedToCurrentEvent() && remotePerson != null && remotePerson!.events.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10),
-                  child: Text(
-                    "Invitado a otros eventos:",
-                    style:
-                        theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+                if (!loading && isGuest && !isInvitedToCurrentEvent())
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      notInvitedLabel,
+                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+                    ),
                   ),
-                ),
-              if (!loading && isGuest && remotePerson != null) eventRow()
-            ],
+                if (!loading && !isInvitedToCurrentEvent() && remotePerson != null && remotePerson!.events.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10),
+                    child: Text(
+                      "Invitado a otros eventos:",
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+                    ),
+                  ),
+                if (!loading && isGuest && remotePerson != null) eventRow()
+              ],
+            ),
           ),
           Positioned(
             bottom: 0,
