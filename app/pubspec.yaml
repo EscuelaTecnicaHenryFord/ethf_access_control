@@ -27,6 +27,7 @@ dependencies:
   win32_registry: ^1.1.2
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.1
+  flutter_zxing: ^1.4.1
 
 dev_dependencies:
   flutter_test:
@@ -40,6 +41,10 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icon.png"
   min_sdk_android: 21 
+  windows:
+    generate: true
+    image_path: "assets/icon.png"
+    icon_size: 48
   
 flutter:
 

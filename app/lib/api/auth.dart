@@ -33,6 +33,7 @@ class AuthHandler {
     if (Platform.isWindows) {
       final SharedPreferences prefs = await getPrefs();
       await prefs.setString("cookie", cookie);
+      return;
     }
 
     return await FlutterKeychain.put(key: "cookie", value: cookie);
@@ -42,6 +43,7 @@ class AuthHandler {
     if (Platform.isWindows) {
       final SharedPreferences prefs = await getPrefs();
       await prefs.remove("cookie");
+      return;
     }
 
     return await FlutterKeychain.remove(key: "cookie");

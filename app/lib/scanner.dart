@@ -2,7 +2,7 @@ import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
-import 'dart:io' show Platform;
+import 'dart:io' as io;
 
 class Scanner extends StatelessWidget {
   const Scanner({
@@ -16,7 +16,13 @@ class Scanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Platform.isIOS;
+    if (!kIsWeb && io.Platform.isWindows) {
+      return const Center(
+        child: Text("No se puede usar el escaner en Windows"),
+      );
+    }
+
+    final isIOS = io.Platform.isIOS;
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
