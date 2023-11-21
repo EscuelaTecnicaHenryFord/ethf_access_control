@@ -35,7 +35,12 @@ class DataProviderWidget extends StatefulWidget {
 }
 
 class DataProviderWidgetState extends State<DataProviderWidget> {
-  bool loading = true;
+  bool dataLoading = false;
+  bool dataLoaded = false;
+
+  bool historyLoaded = false;
+  bool historyLoading = false;
+
   List<RemotePerson> guests = [];
   List<RemotePerson> identities = [];
   List<Event> events = [];
@@ -69,19 +74,21 @@ class DataProviderWidgetState extends State<DataProviderWidget> {
 
   @override
   void initState() {
-    fetchData();
     super.initState();
   }
 
-  void fetchData() async {
+  Future<void> updateData() async {
+    setState(() {
+      dataLoading = true;
+    });
+
     final guests = await AppApi.instance.fetchGuests();
     final events = await AppApi.instance.fetchEvents();
     final identities = await AppApi.instance.fetchIdentities();
 
-    await updateHistory();
-
     setState(() {
-      loading = false;
+      dataLoading = false;
+      dataLoaded = true;
       this.guests = guests;
       this.events = events;
       this.identities = identities;
@@ -89,14 +96,16 @@ class DataProviderWidgetState extends State<DataProviderWidget> {
     });
   }
 
-  void update() {
-    fetchData();
-  }
-
   Future<void> updateHistory() async {
+    setState(() {
+      historyLoading = true;
+    });
+
     final history = await AppApi.instance.fetchHistory();
 
     setState(() {
+      historyLoaded = true;
+      historyLoading = false;
       this.history = history;
       lastUpdate = DateTime.now().microsecondsSinceEpoch;
 

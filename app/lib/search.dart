@@ -1,16 +1,28 @@
+import 'dart:async';
+
 import 'package:diacritic/diacritic.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
+import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/person_page.dart';
 import 'package:ethf_access_control_app/scan_dni_dialog.dart';
 import 'package:flutter/material.dart';
+
+Future<List<RemotePerson>> getIdentities() async {
+  final provider = providerKey.currentState;
+  if (provider == null || !provider.dataLoaded) {
+    return await AppApi.instance.fetchIdentities();
+  }
+
+  return provider.identities;
+}
 
 class GlobalSearch extends SearchDelegate {
   GlobalSearch({
     this.onResultTap,
   });
 
-  final future = AppApi.instance.fetchIdentities();
+  final future = getIdentities();
 
   final Function(RemotePerson person)? onResultTap;
 
@@ -67,7 +79,7 @@ class GlobalSearch extends SearchDelegate {
   }
 }
 
-class SearchResults extends StatelessWidget {
+class SearchResults extends StatefulWidget {
   const SearchResults({super.key, required this.future, required this.filter, this.onResultTap});
 
   final Future<List<RemotePerson>> future;
@@ -75,12 +87,73 @@ class SearchResults extends StatelessWidget {
 
   final Function(RemotePerson person)? onResultTap;
 
+  @override
+  State<SearchResults> createState() => _SearchResultsState();
+}
+
+class _SearchResultsState extends State<SearchResults> {
+  Timer? timeout;
+
+  List<RemotePerson> list = [];
+
+  bool shouldWriteMoreCharacters = false;
+
+  bool loading = true;
+
+  List<RemotePerson>? snapShotData;
+
+  void calculateResults(List<RemotePerson> data) {
+    if (widget.filter.length < 3) {
+      setState(() {
+        list = [];
+        shouldWriteMoreCharacters = true;
+      });
+      return;
+    }
+
+    setState(() {
+      list = filterList(data);
+      shouldWriteMoreCharacters = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.future.then((value) {
+      snapShotData = value;
+      calculateResults(value);
+      setState(() {
+        loading = false;
+      });
+    });
+  }
+
+  @override
+  didUpdateWidget(SearchResults oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.filter != widget.filter) {
+      timeout?.cancel();
+
+      if (snapShotData == null) return;
+
+      timeout = Timer(const Duration(milliseconds: 300), () {
+        timeout?.cancel();
+        setState(() {
+          calculateResults(snapShotData!);
+        });
+      });
+    }
+  }
+
   List<RemotePerson> filterList(List<RemotePerson> people) {
     String trans(String s) {
       return removeDiacritics(s).toLowerCase().trim().replaceAll(',', '');
     }
 
-    final filter = trans(this.filter);
+    final filter = trans(widget.filter);
 
     if (filter.isEmpty) {
       return people;
@@ -117,36 +190,29 @@ class SearchResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text(snapshot.error.toString()));
-        }
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    if (shouldWriteMoreCharacters) {
+      return const Center(child: Text("Escriba al menos 3 caracteres"));
+    }
 
-        final list = filterList(snapshot.data!);
+    return ListView.builder(
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(list[index].name),
+          subtitle:
+              Text("${list[index].id == '' ? list[index].dni.toString() : list[index].id} - ${list[index].typeName}"),
+          onTap: () {
+            if (widget.onResultTap != null) {
+              widget.onResultTap!(list[index]);
+              Navigator.of(context).pop();
+              return;
+            }
 
-        return ListView.builder(
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(list[index].name),
-              subtitle: Text(
-                  "${list[index].id == '' ? list[index].dni.toString() : list[index].id} - ${list[index].typeName}"),
-              onTap: () {
-                if (onResultTap != null) {
-                  onResultTap!(list[index]);
-                  Navigator.of(context).pop();
-                  return;
-                }
-
-                showPersonPage(context, list[index]);
-              },
-            );
+            showPersonPage(context, list[index]);
           },
         );
       },

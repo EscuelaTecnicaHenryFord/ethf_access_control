@@ -160,9 +160,9 @@ class AppApi {
 }
 
 String get baseUrl {
-  if (kDebugMode && !Platform.isIOS) {
-    return 'http://10.0.31.28:3000';
-  }
+  // if (kDebugMode && !Platform.isIOS) {
+  //   return 'http://10.0.31.28:3000';
+  // }
 
   return 'https://ethf-access-control.vercel.app';
 }

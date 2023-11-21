@@ -7,7 +7,6 @@ import 'package:ethf_access_control_app/scanner_view.dart';
 import 'package:ethf_access_control_app/search.dart';
 import 'package:ethf_access_control_app/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,8 +52,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   late final TabController controller;
 
-  final RefreshController refreshController = RefreshController(initialRefresh: false);
-
   @override
   void initState() {
     controller = TabController(length: 3, vsync: this);
@@ -96,12 +93,17 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   fontWeight: FontWeight.w500,
                 ),
               )),
-          IconButton(
-            icon: const Icon(Icons.sync),
-            onPressed: () {
-              refreshController.requestRefresh();
-            },
-          ),
+          if (controller.index != 1)
+            IconButton(
+              icon: const Icon(Icons.sync),
+              onPressed: () {
+                if (controller.index == 0) {
+                  DataProvider.of(context).state.updateData();
+                } else if (controller.index == 2) {
+                  DataProvider.of(context).state.updateHistory();
+                }
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
@@ -122,18 +124,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           NavigationDestination(icon: Icon(Icons.history), label: "Historial"),
         ],
       ),
-      body: SmartRefresher(
-        onRefresh: () async {
-          DataProvider.of(context).state.update();
-          refreshController.refreshCompleted();
-        },
-        controller: refreshController,
-        child: TabBarView(controller: controller, children: const [
-          HomeScreen(),
-          ScannerView(),
-          HistoryScreen(),
-        ]),
-      ),
+      body: TabBarView(controller: controller, children: const [
+        HomeScreen(),
+        ScannerView(),
+        HistoryScreen(),
+      ]),
       floatingActionButton: controller.index == 0
           ? FloatingActionButton.extended(
               onPressed: () {

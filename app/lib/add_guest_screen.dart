@@ -1,5 +1,6 @@
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
+import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:ethf_access_control_app/scan_dni_dialog.dart';
 import 'package:ethf_access_control_app/search.dart';
@@ -92,6 +93,7 @@ class _AddGuestScreenState extends State<AddGuestScreen> {
       AppApi.instance.postAddGuest(data).then((value) {
         if (registerNow) {
           AppApi.instance.postHistory(dni, data);
+          providerKey.currentState?.updateHistory();
         }
 
         Navigator.of(context).pop(true);
