@@ -33,7 +33,7 @@ class Scanner extends StatelessWidget {
               showToggleCamera: false,
               showGallery: false,
               tryHarder: isIOS ? true : false,
-              cropPercent: isIOS ? 0.3 : 0.5,
+              cropPercent: 0.5,
               resolution: isIOS ? ResolutionPreset.max : ResolutionPreset.high,
               scanDelay: Duration(milliseconds: isIOS ? 100 : 1000),
               onScan: (result) async {
