@@ -91,7 +91,7 @@ export function ManageGuests(props: { studentData: AppRouterOutputs['verifyStude
             </>}
 
             {!hasGuests && <>
-                <p className="font-medium">Todabía no se han registrado invitados.</p>
+                <p className="font-medium">Todavía no se han registrado invitados.</p>
             </>}
 
             <AddGuestFormDialog verificationData={props.verificationData!} onGuestAdded={async () => {
