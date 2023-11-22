@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,78 +7,48 @@ import 'package:camera/camera.dart';
 import 'package:flutter_barcode_sdk/dynamsoft_barcode.dart';
 import 'package:flutter_barcode_sdk/flutter_barcode_sdk.dart';
 
-class Mobile extends StatefulWidget {
-  final CameraDescription camera;
+bool cameraInitialized = false;
 
+class Mobile extends StatefulWidget {
   const Mobile({
     super.key,
-    required this.camera,
     required this.onPersonRead,
     required this.onError,
+    required this.cameraController,
+    required this.barcodeReader,
   });
 
   final Future<void> Function(PersonInfo person) onPersonRead;
   final void Function(Exception error) onError;
+  final CameraController cameraController;
+  final FlutterBarcodeSdk barcodeReader;
 
   @override
   MobileState createState() => MobileState();
 }
 
 class MobileState extends State<Mobile> {
-  CameraController? _controller;
-  FlutterBarcodeSdk? _barcodeReader;
-  bool _isScanAvailable = true;
-  bool _isScanRunning = false;
+  bool imageStreamStarted = false;
+
+  int allowNextScanMS = 0;
 
   @override
   void initState() {
     super.initState();
-    // To display the current output from the Camera,
-    // create a CameraController.
-    _controller = CameraController(
-      // Get a specific camera from the list of available cameras.
-      widget.camera,
-      // Define the resolution to use.
-      ResolutionPreset.max,
-    );
-
-    // Next, initialize the controller. This returns a Future.
-    _controller!.initialize().then((_) {
-      setState(() {});
-      startVideo();
-    });
-    // Initialize Dynamsoft Barcode Reader
-    initBarcodeSDK();
-  }
-
-  Future<void> initBarcodeSDK() async {
-    _barcodeReader = FlutterBarcodeSdk();
-    // Get 30-day FREEE trial license from https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
-    await _barcodeReader!.setLicense(
-        'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==');
-    await _barcodeReader!.init();
-    await _barcodeReader!.setBarcodeFormats(BarcodeFormat.PDF417);
-    // Get all current parameters.
-    // Refer to: https://www.dynamsoft.com/barcode-reader/parameters/reference/image-parameter/?ver=latest
-    String params = await _barcodeReader!.getParameters();
-    // Convert parameters to a JSON object.
-    dynamic obj = json.decode(params);
-    // Modify parameters.
-    obj['ImageParameter']['DeblurLevel'] = 5;
-    // Update the parameters.
-    int ret = await _barcodeReader!.setParameters(json.encode(obj));
-    print('Parameter update: $ret');
+    if (!widget.cameraController.value.isInitialized) {
+      widget.cameraController.initialize();
+    }
+    startVideo();
   }
 
   void pictureScan() async {
-    if (_isScanRunning) stopVideo();
-    final image = await _controller!.takePicture();
-    List<BarcodeResult> results = await _barcodeReader!.decodeFile(image.path);
-
+    if (imageStreamStarted) stopVideo();
+    final image = await widget.cameraController.takePicture();
+    List<BarcodeResult> results = await widget.barcodeReader.decodeFile(image.path);
     onResults(results);
   }
 
-  void onResults(List<BarcodeResult> results) {
+  Future<void> onResults(List<BarcodeResult> results) async {
     final text = results.firstOrNull?.text;
     if (text == null) return;
     PersonInfo? personInfo;
@@ -98,7 +66,19 @@ class MobileState extends State<Mobile> {
     }
 
     if (personInfo != null) {
-      stopVideo();
+      try {
+        stopVideo();
+        allowNextScanMS = 0x7FFFFFFFFFFFFFFF;
+        await widget.onPersonRead(personInfo);
+      } catch (e) {
+        if (kDebugMode) {
+          print(e);
+        }
+      } finally {
+        await startVideo();
+        allowNextScanMS = DateTime.now().millisecondsSinceEpoch + 200;
+      }
+
       widget.onPersonRead(personInfo).then((value) {}).catchError((error) {
         if (kDebugMode) {
           print(error);
@@ -111,84 +91,84 @@ class MobileState extends State<Mobile> {
     }
   }
 
-  void startVideo() async {
-    _isScanRunning = true;
-    await _controller!.startImageStream((CameraImage availableImage) async {
-      assert(defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
-      int format = ImagePixelFormat.IPF_NV21.index;
+  int _imageFormat(CameraImage image) {
+    switch (image.format.group) {
+      case ImageFormatGroup.yuv420:
+        return ImagePixelFormat.IPF_NV21.index;
+      case ImageFormatGroup.bgra8888:
+        return ImagePixelFormat.IPF_ARGB_8888.index;
+      default:
+        return ImagePixelFormat.IPF_RGB_888.index;
+    }
+  }
 
-      switch (availableImage.format.group) {
-        case ImageFormatGroup.yuv420:
-          format = ImagePixelFormat.IPF_NV21.index;
-          break;
-        case ImageFormatGroup.bgra8888:
-          format = ImagePixelFormat.IPF_ARGB_8888.index;
-          break;
-        default:
-          format = ImagePixelFormat.IPF_RGB_888.index;
+  Future<void> startVideo() async {
+    if (imageStreamStarted) return;
+    setState(() {
+      imageStreamStarted = true;
+    });
+    await widget.cameraController.startImageStream((CameraImage availableImage) async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now > allowNextScanMS && imageStreamStarted) {
+        allowNextScanMS = now + 200;
+        onAvailableImage(availableImage);
       }
-
-      if (!_isScanAvailable) {
-        return;
-      }
-
-      _isScanAvailable = false;
-
-      _barcodeReader!
-          .decodeImageBuffer(availableImage.planes[0].bytes, availableImage.width, availableImage.height,
-              availableImage.planes[0].bytesPerRow, format)
-          .then((results) {
-        if (_isScanRunning) {
-          setState(() {
-            onResults(results);
-          });
-        }
-
-        _isScanAvailable = true;
-      }).catchError((error) {
-        _isScanAvailable = false;
-      });
     });
   }
 
-  void stopVideo() async {
-    _isScanRunning = false;
-    await _controller!.stopImageStream();
+  void onAvailableImage(CameraImage availableImage) async {
+    assert(defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+    final format = _imageFormat(availableImage);
+
+    try {
+      final results = await widget.barcodeReader.decodeImageBuffer(
+        availableImage.planes[0].bytes,
+        availableImage.width,
+        availableImage.height,
+        availableImage.planes[0].bytesPerRow,
+        format,
+      );
+
+      onResults(results);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
   }
 
-  void videoScan() async {
-    if (!_isScanRunning) {
-      startVideo();
-    } else {
-      stopVideo();
-    }
+  Future<void> stopVideo() async {
+    setState(() {
+      imageStreamStarted = false;
+    });
+    await widget.cameraController.stopImageStream();
   }
 
   @override
   void dispose() {
-    // Dispose of the controller when the widget is disposed.
-    _controller?.dispose();
+    // widget.cameraController.dispose();
     super.dispose();
   }
 
   Widget getCameraWidget() {
-    if (!_controller!.value.isInitialized) {
-      return Center(child: CircularProgressIndicator());
-    } else {
-      // https://stackoverflow.com/questions/49946153/flutter-camera-appears-stretched
-      final size = MediaQuery.of(context).size;
-      var scale = size.aspectRatio * _controller!.value.aspectRatio;
+    return LayoutBuilder(builder: (context, constrains) {
+      if (!widget.cameraController.value.isInitialized) {
+        return const Center(child: CircularProgressIndicator());
+      } else {
+        // https://stackoverflow.com/questions/49946153/flutter-camera-appears-stretched
+        final size = Size(constrains.maxWidth, constrains.maxHeight);
+        var scale = size.aspectRatio * widget.cameraController.value.aspectRatio;
 
-      if (scale < 1) scale = 1 / scale;
+        if (scale < 1) scale = 1 / scale;
 
-      return Transform.scale(
-        scale: scale,
-        child: Center(
-          child: CameraPreview(_controller!),
-        ),
-      );
-      // return CameraPreview(_controller);
-    }
+        return Transform.scale(
+          scale: scale,
+          child: Center(
+            child: CameraPreview(widget.cameraController),
+          ),
+        );
+      }
+    });
   }
 
   @override
@@ -201,22 +181,22 @@ class MobileState extends State<Mobile> {
         right: 10,
         child: IconButton(
           onPressed: () {
-            if (_isScanRunning) {
+            if (imageStreamStarted) {
               stopVideo();
             } else {
               startVideo();
             }
           },
-          icon: _isScanRunning ? const Icon(Icons.pause_rounded) : const Icon(Icons.play_arrow_rounded),
+          icon: imageStreamStarted ? const Icon(Icons.pause_rounded) : const Icon(Icons.play_arrow_rounded),
         ),
       ),
       Positioned(
         bottom: 10,
         right: 60,
         child: IconButton(
-          onPressed: () {
-            if (_isScanRunning) {
-              stopVideo();
+          onPressed: () async {
+            if (imageStreamStarted) {
+              await stopVideo();
             }
 
             pictureScan();
@@ -233,33 +213,69 @@ class Scanner extends StatefulWidget {
     super.key,
     required this.onPersonRead,
     required this.onError,
+    required this.cameras,
+    required this.barcodeReader,
   });
 
   final Future<void> Function(PersonInfo person) onPersonRead;
   final void Function(Exception error) onError;
+  final List<CameraDescription>? cameras;
+  final FlutterBarcodeSdk? barcodeReader;
 
   @override
   State<Scanner> createState() => _ScannerState();
 }
 
 class _ScannerState extends State<Scanner> {
-  final cameras = availableCameras();
+  CameraController? cameraController;
+
+  @override
+  void initState() {
+    init();
+
+    super.initState();
+  }
+
+  Future<void> init() async {
+    final cam = widget.cameras?.firstOrNull;
+
+    if (cam != null) {
+      final cc = CameraController(cam, ResolutionPreset.max);
+
+      await cc.initialize();
+
+      setState(() {
+        cameraController = cc;
+      });
+    }
+  }
 
   @override
   Widget build(Object context) {
-    return FutureBuilder(
-        future: cameras,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return Mobile(
-              camera: snapshot.data![0],
-              onError: widget.onError,
-              onPersonRead: widget.onPersonRead,
-            );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        });
+    print(cameraController);
+    if (widget.barcodeReader != null && cameraController != null) {
+      return Mobile(
+        onError: widget.onError,
+        onPersonRead: widget.onPersonRead,
+        cameraController: cameraController!,
+        barcodeReader: widget.barcodeReader!,
+      );
+    }
+
+    return const Stack(
+      children: [
+        Center(
+          child: SizedBox(
+            width: 80,
+            height: 80,
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        Center(
+          child: Icon(Icons.qr_code_scanner_rounded),
+        ),
+      ],
+    );
   }
 }
 
@@ -268,33 +284,34 @@ class Overlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
-    final w = width / 2 + 10;
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.srcOut), // This one will create the magic
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.black,
-              backgroundBlendMode: BlendMode.dstOut,
-            ), // This one will handle background + difference out
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              width: w,
+    return LayoutBuilder(builder: (context, constrains) {
+      final w = constrains.maxWidth / 2 + 10;
+      return ColorFiltered(
+        colorFilter:
+            ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.srcOut), // This one will create the magic
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
                 color: Colors.black,
-              ),
-              child: const AspectRatio(aspectRatio: 4),
+                backgroundBlendMode: BlendMode.dstOut,
+              ), // This one will handle background + difference out
             ),
-          ),
-        ],
-      ),
-    );
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: w,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  color: Colors.black,
+                ),
+                child: const AspectRatio(aspectRatio: 4),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

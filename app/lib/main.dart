@@ -1,12 +1,15 @@
+import 'package:camera/camera.dart';
 import 'package:ethf_access_control_app/add_guest_screen.dart';
 import 'package:ethf_access_control_app/auth_wrapper.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/history_screen.dart';
 import 'package:ethf_access_control_app/home_screen.dart';
+import 'package:ethf_access_control_app/scanner_sdk_provider.dart';
 import 'package:ethf_access_control_app/scanner_view.dart';
 import 'package:ethf_access_control_app/search.dart';
 import 'package:ethf_access_control_app/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_sdk/flutter_barcode_sdk.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,10 +55,29 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   late final TabController controller;
 
+  FlutterBarcodeSdk? barcodeReader;
+  List<CameraDescription>? cameras;
+
+  void initBarcode() {
+    initBarcodeSDK().then((value) {
+      barcodeReader = value;
+    });
+
+    availableCameras().then((value) {
+      if (!mounted) return;
+      setState(() {
+        cameras = value;
+      });
+    });
+  }
+
   @override
   void initState() {
     controller = TabController(length: 3, vsync: this);
     controller.addListener(listener);
+
+    initBarcode();
+
     super.initState();
   }
 
@@ -124,10 +146,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           NavigationDestination(icon: Icon(Icons.history), label: "Historial"),
         ],
       ),
-      body: TabBarView(controller: controller, children: const [
-        HomeScreen(),
-        ScannerView(),
-        HistoryScreen(),
+      body: TabBarView(controller: controller, children: [
+        const HomeScreen(),
+        ScannerView(barcodeReader: barcodeReader, cameras: cameras),
+        const HistoryScreen(),
       ]),
       floatingActionButton: controller.index == 0
           ? FloatingActionButton.extended(
