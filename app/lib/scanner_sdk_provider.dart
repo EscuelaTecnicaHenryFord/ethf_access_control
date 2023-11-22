@@ -23,3 +23,18 @@ Future<FlutterBarcodeSdk> initBarcodeSDK() async {
 
   return barcodeReader;
 }
+
+FlutterBarcodeSdk? barcodeReader;
+Future<FlutterBarcodeSdk>? future;
+
+Future<FlutterBarcodeSdk> globalInitBarcodeSDK() async {
+  if (barcodeReader != null) return barcodeReader!;
+  if (future != null) return future!;
+
+  final f = initBarcodeSDK();
+  future = f;
+  barcodeReader = await f;
+  future = null;
+
+  return barcodeReader!;
+}

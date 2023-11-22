@@ -1,17 +1,12 @@
-import 'package:camera/camera.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:ethf_access_control_app/person_info_card.dart';
 import 'package:ethf_access_control_app/scanner.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_barcode_sdk/flutter_barcode_sdk.dart';
 
 class ScannerView extends StatefulWidget {
-  const ScannerView({super.key, required this.cameras, required this.barcodeReader});
-
-  final List<CameraDescription>? cameras;
-  final FlutterBarcodeSdk? barcodeReader;
+  const ScannerView({super.key});
 
   @override
   State<ScannerView> createState() => _ScannerViewState();
@@ -72,8 +67,6 @@ class _ScannerViewState extends State<ScannerView> {
         Scanner(
           onPersonRead: showPersonInfo,
           onError: handleError,
-          barcodeReader: widget.barcodeReader,
-          cameras: widget.cameras,
         ),
       ],
     );

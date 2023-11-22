@@ -1,4 +1,6 @@
+import 'package:ethf_access_control_app/cameras.dart';
 import 'package:ethf_access_control_app/person_info.dart';
+import 'package:ethf_access_control_app/scanner_sdk_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -35,14 +37,10 @@ class MobileState extends State<Mobile> {
   @override
   void initState() {
     super.initState();
-    if (!widget.cameraController.value.isInitialized) {
-      widget.cameraController.initialize();
-    }
     startVideo();
   }
 
   void pictureScan() async {
-    if (imageStreamStarted) stopVideo();
     final image = await widget.cameraController.takePicture();
     List<BarcodeResult> results = await widget.barcodeReader.decodeFile(image.path);
     onResults(results);
@@ -51,7 +49,9 @@ class MobileState extends State<Mobile> {
   Future<void> onResults(List<BarcodeResult> results) async {
     final text = results.firstOrNull?.text;
     if (text == null) return;
+
     PersonInfo? personInfo;
+
     try {
       personInfo = PersonInfo.parse(text);
       if (kDebugMode) {
@@ -67,7 +67,6 @@ class MobileState extends State<Mobile> {
 
     if (personInfo != null) {
       try {
-        stopVideo();
         allowNextScanMS = 0x7FFFFFFFFFFFFFFF;
         await widget.onPersonRead(personInfo);
       } catch (e) {
@@ -78,14 +77,6 @@ class MobileState extends State<Mobile> {
         await startVideo();
         allowNextScanMS = DateTime.now().millisecondsSinceEpoch + 200;
       }
-
-      widget.onPersonRead(personInfo).then((value) {}).catchError((error) {
-        if (kDebugMode) {
-          print(error);
-        }
-      }).whenComplete(() {
-        startVideo();
-      });
     } else {
       widget.onError(Exception("No se pudo leer el documento"));
     }
@@ -137,16 +128,8 @@ class MobileState extends State<Mobile> {
     }
   }
 
-  Future<void> stopVideo() async {
-    setState(() {
-      imageStreamStarted = false;
-    });
-    await widget.cameraController.stopImageStream();
-  }
-
   @override
   void dispose() {
-    // widget.cameraController.dispose();
     super.dispose();
   }
 
@@ -158,6 +141,12 @@ class MobileState extends State<Mobile> {
         // https://stackoverflow.com/questions/49946153/flutter-camera-appears-stretched
         final size = Size(constrains.maxWidth, constrains.maxHeight);
         var scale = size.aspectRatio * widget.cameraController.value.aspectRatio;
+
+        final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
+        if (isLandscape) {
+          scale = size.aspectRatio * (1 / widget.cameraController.value.aspectRatio);
+        }
 
         if (scale < 1) scale = 1 / scale;
 
@@ -173,38 +162,12 @@ class MobileState extends State<Mobile> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      Positioned.fill(child: getCameraWidget()),
-      const Positioned.fill(child: Overlay()),
-      Positioned(
-        bottom: 10,
-        right: 10,
-        child: IconButton(
-          onPressed: () {
-            if (imageStreamStarted) {
-              stopVideo();
-            } else {
-              startVideo();
-            }
-          },
-          icon: imageStreamStarted ? const Icon(Icons.pause_rounded) : const Icon(Icons.play_arrow_rounded),
-        ),
-      ),
-      Positioned(
-        bottom: 10,
-        right: 60,
-        child: IconButton(
-          onPressed: () async {
-            if (imageStreamStarted) {
-              await stopVideo();
-            }
-
-            pictureScan();
-          },
-          icon: const Icon(Icons.camera_alt_rounded),
-        ),
-      )
-    ]);
+    return Stack(
+      children: [
+        getCameraWidget(),
+        const Overlay(),
+      ],
+    );
   }
 }
 
@@ -213,14 +176,10 @@ class Scanner extends StatefulWidget {
     super.key,
     required this.onPersonRead,
     required this.onError,
-    required this.cameras,
-    required this.barcodeReader,
   });
 
   final Future<void> Function(PersonInfo person) onPersonRead;
   final void Function(Exception error) onError;
-  final List<CameraDescription>? cameras;
-  final FlutterBarcodeSdk? barcodeReader;
 
   @override
   State<Scanner> createState() => _ScannerState();
@@ -229,16 +188,20 @@ class Scanner extends StatefulWidget {
 class _ScannerState extends State<Scanner> {
   CameraController? cameraController;
 
+  FlutterBarcodeSdk? barcodeReader;
+  List<CameraDescription>? cameras;
+
   @override
   void initState() {
-    init();
-
     super.initState();
+    init();
   }
 
   Future<void> init() async {
-    final cam = widget.cameras?.firstOrNull;
+    final barcodeReader = await globalInitBarcodeSDK();
+    final cameras = await globalAvailableCameras();
 
+    final cam = cameras?.firstOrNull;
     if (cam != null) {
       final cc = CameraController(cam, ResolutionPreset.max);
 
@@ -246,19 +209,20 @@ class _ScannerState extends State<Scanner> {
 
       setState(() {
         cameraController = cc;
+        this.barcodeReader = barcodeReader;
+        this.cameras = cameras;
       });
     }
   }
 
   @override
   Widget build(Object context) {
-    print(cameraController);
-    if (widget.barcodeReader != null && cameraController != null) {
+    if (barcodeReader != null && cameraController != null) {
       return Mobile(
         onError: widget.onError,
         onPersonRead: widget.onPersonRead,
         cameraController: cameraController!,
-        barcodeReader: widget.barcodeReader!,
+        barcodeReader: barcodeReader!,
       );
     }
 

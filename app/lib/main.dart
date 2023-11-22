@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:ethf_access_control_app/add_guest_screen.dart';
 import 'package:ethf_access_control_app/auth_wrapper.dart';
+import 'package:ethf_access_control_app/cameras.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
 import 'package:ethf_access_control_app/history_screen.dart';
 import 'package:ethf_access_control_app/home_screen.dart';
@@ -58,25 +59,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   FlutterBarcodeSdk? barcodeReader;
   List<CameraDescription>? cameras;
 
-  void initBarcode() {
-    initBarcodeSDK().then((value) {
-      barcodeReader = value;
-    });
-
-    availableCameras().then((value) {
-      if (!mounted) return;
-      setState(() {
-        cameras = value;
-      });
-    });
-  }
-
   @override
   void initState() {
     controller = TabController(length: 3, vsync: this);
     controller.addListener(listener);
 
-    initBarcode();
+    globalInitBarcodeSDK();
+    globalAvailableCameras();
 
     super.initState();
   }
@@ -146,10 +135,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           NavigationDestination(icon: Icon(Icons.history), label: "Historial"),
         ],
       ),
-      body: TabBarView(controller: controller, children: [
-        const HomeScreen(),
-        ScannerView(barcodeReader: barcodeReader, cameras: cameras),
-        const HistoryScreen(),
+      body: TabBarView(controller: controller, children: const [
+        HomeScreen(),
+        ScannerView(),
+        HistoryScreen(),
       ]),
       floatingActionButton: controller.index == 0
           ? FloatingActionButton.extended(
