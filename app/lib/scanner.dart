@@ -76,12 +76,17 @@ class MobileState extends State<Mobile> {
 
     PersonInfo? personInfo;
 
+    print(text);
+
     try {
       personInfo = PersonInfo.parse(text);
       if (kDebugMode) {
         print(personInfo);
       }
     } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("No se pudo leer el documento"),
