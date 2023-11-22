@@ -1,5 +1,5 @@
 name: ethf_access_control_app
-description: A new Flutter project.
+description: Aplicación para controlar el acceso con DNI a la Escuela Técnica Henry Ford.
 
 publish_to: 'none'
 
@@ -14,7 +14,6 @@ dependencies:
 
 
   cupertino_icons: ^1.0.2
-  # flutter_zxing: ^1.4.1
   intl: ^0.18.1
   bottom_sheet: ^4.0.0
   http: ^1.1.0
@@ -27,11 +26,11 @@ dependencies:
   win32_registry: ^1.1.2
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.1
-  flutter_zxing: ^1.4.1
   google_mlkit_barcode_scanning: ^0.10.0
   flutter_barcode_sdk: ^2.2.6
   camera: ^0.10.5+5
   camera_platform_interface: ^2.6.0
+  camera_windows: ^0.2.1+8
 
 dev_dependencies:
   flutter_test:

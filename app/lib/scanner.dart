@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ethf_access_control_app/cameras.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:ethf_access_control_app/scanner_sdk_provider.dart';
@@ -18,12 +20,16 @@ class Mobile extends StatefulWidget {
     required this.onError,
     required this.cameraController,
     required this.barcodeReader,
+    required this.cameras,
+    required this.onCameraSelected,
   });
 
   final Future<void> Function(PersonInfo person) onPersonRead;
   final void Function(Exception error) onError;
   final CameraController cameraController;
   final FlutterBarcodeSdk barcodeReader;
+  final List<CameraDescription> cameras;
+  final void Function(int index) onCameraSelected;
 
   @override
   MobileState createState() => MobileState();
@@ -37,7 +43,23 @@ class MobileState extends State<Mobile> {
   @override
   void initState() {
     super.initState();
-    startVideo();
+
+    if (Platform.isWindows) {
+      startWindowsTimer();
+    } else {
+      startVideo();
+    }
+  }
+
+  Timer? timer;
+
+  void startWindowsTimer() {
+    timer = Timer.periodic(const Duration(milliseconds: 400), (timer) async {
+      if (DateTime.now().millisecondsSinceEpoch > allowNextScanMS) {
+        if (this.timer == null) return;
+        pictureScan();
+      }
+    });
   }
 
   void pictureScan() async {
@@ -74,7 +96,9 @@ class MobileState extends State<Mobile> {
           print(e);
         }
       } finally {
-        await startVideo();
+        if (!Platform.isWindows) {
+          await startVideo();
+        }
         allowNextScanMS = DateTime.now().millisecondsSinceEpoch + 200;
       }
     } else {
@@ -108,7 +132,6 @@ class MobileState extends State<Mobile> {
   }
 
   void onAvailableImage(CameraImage availableImage) async {
-    assert(defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
     final format = _imageFormat(availableImage);
 
     try {
@@ -130,6 +153,8 @@ class MobileState extends State<Mobile> {
 
   @override
   void dispose() {
+    timer?.cancel();
+    timer = null;
     super.dispose();
   }
 
@@ -166,6 +191,26 @@ class MobileState extends State<Mobile> {
       children: [
         getCameraWidget(),
         const Overlay(),
+        if (cameras!.length > 1)
+          SelectCameraDropDown(cameras: widget.cameras, onCameraSelected: (v) {}, cameraIndex: 0),
+        if (Platform.isWindows)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  pictureScan();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                  child: Text("Escanear"),
+                ),
+              ),
+            ),
+          )
       ],
     );
   }
@@ -191,6 +236,8 @@ class _ScannerState extends State<Scanner> {
   FlutterBarcodeSdk? barcodeReader;
   List<CameraDescription>? cameras;
 
+  int cameraIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -201,11 +248,13 @@ class _ScannerState extends State<Scanner> {
     final barcodeReader = await globalInitBarcodeSDK();
     final cameras = await globalAvailableCameras();
 
-    final cam = cameras?.firstOrNull;
+    final cam = cameras.length > cameraIndex ? cameras[cameraIndex] : null;
     if (cam != null) {
       final cc = CameraController(cam, ResolutionPreset.max);
 
-      await cc.initialize();
+      if (!cc.value.isInitialized) {
+        await cc.initialize();
+      }
 
       setState(() {
         cameraController = cc;
@@ -218,11 +267,25 @@ class _ScannerState extends State<Scanner> {
   @override
   Widget build(Object context) {
     if (barcodeReader != null && cameraController != null) {
-      return Mobile(
-        onError: widget.onError,
-        onPersonRead: widget.onPersonRead,
-        cameraController: cameraController!,
-        barcodeReader: barcodeReader!,
+      return Stack(
+        children: [
+          Mobile(
+            onError: widget.onError,
+            onPersonRead: widget.onPersonRead,
+            cameraController: cameraController!,
+            barcodeReader: barcodeReader!,
+            cameras: cameras!,
+            onCameraSelected: (index) {
+              setState(() {
+                cameraIndex = index;
+                cameraController = null;
+                barcodeReader = null;
+                cameras = null;
+              });
+              init();
+            },
+          ),
+        ],
       );
     }
 
@@ -239,6 +302,35 @@ class _ScannerState extends State<Scanner> {
           child: Icon(Icons.qr_code_scanner_rounded),
         ),
       ],
+    );
+  }
+}
+
+class SelectCameraDropDown extends StatelessWidget {
+  const SelectCameraDropDown({
+    super.key,
+    required this.cameras,
+    required this.onCameraSelected,
+    required this.cameraIndex,
+  });
+
+  final List<CameraDescription> cameras;
+  final void Function(int index) onCameraSelected;
+  final int cameraIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<int>(
+      value: cameraIndex,
+      onChanged: (index) {
+        onCameraSelected(index!);
+      },
+      items: cameras.map((e) {
+        return DropdownMenuItem<int>(
+          value: cameras.indexOf(e),
+          child: Text(e.name),
+        );
+      }).toList(),
     );
   }
 }
