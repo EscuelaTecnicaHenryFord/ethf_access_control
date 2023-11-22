@@ -3,7 +3,11 @@ PODS:
     - Flutter
   - camera_avfoundation (0.0.1):
     - Flutter
+  - DynamsoftBarcodeReader (9.6.21)
   - Flutter (1.0.0)
+  - flutter_barcode_sdk (2.2.0):
+    - DynamsoftBarcodeReader (= 9.6.21)
+    - Flutter
   - flutter_inappwebview (0.0.1):
     - Flutter
     - flutter_inappwebview/Core (= 0.0.1)
@@ -12,10 +16,6 @@ PODS:
     - Flutter
     - OrderedSet (~> 5.0)
   - flutter_keychain (0.0.1):
-    - Flutter
-  - flutter_zxing (0.0.1):
-    - Flutter
-  - image_picker_ios (0.0.1):
     - Flutter
   - OrderedSet (5.0.0)
   - shared_preferences_foundation (0.0.1):
@@ -28,15 +28,15 @@ DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
+  - flutter_barcode_sdk (from `.symlinks/plugins/flutter_barcode_sdk/ios`)
   - flutter_inappwebview (from `.symlinks/plugins/flutter_inappwebview/ios`)
   - flutter_keychain (from `.symlinks/plugins/flutter_keychain/ios`)
-  - flutter_zxing (from `.symlinks/plugins/flutter_zxing/ios`)
-  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
+    - DynamsoftBarcodeReader
     - OrderedSet
 
 EXTERNAL SOURCES:
@@ -46,14 +46,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
+  flutter_barcode_sdk:
+    :path: ".symlinks/plugins/flutter_barcode_sdk/ios"
   flutter_inappwebview:
     :path: ".symlinks/plugins/flutter_inappwebview/ios"
   flutter_keychain:
     :path: ".symlinks/plugins/flutter_keychain/ios"
-  flutter_zxing:
-    :path: ".symlinks/plugins/flutter_zxing/ios"
-  image_picker_ios:
-    :path: ".symlinks/plugins/image_picker_ios/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   url_launcher_ios:
@@ -62,15 +60,15 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   app_links: 5ef33d0d295a89d9d16bb81b0e3b0d5f70d6c875
   camera_avfoundation: 3125e8cd1a4387f6f31c6c63abb8a55892a9eeeb
+  DynamsoftBarcodeReader: 7544bb56f3ea940003688355267e6e32ca999030
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_barcode_sdk: 5ab04c18c3230e7ddf09c02267c96e58a25eb8b8
   flutter_inappwebview: 3d32228f1304635e7c028b0d4252937730bbc6cf
   flutter_keychain: 01aabf894ffe8b01adfda1d9df21c210c1b4b452
-  flutter_zxing: 19a866d17c8a87ee1026d68521c69d2f008635f6
-  image_picker_ios: 4a8aadfbb6dc30ad5141a2ce3832af9214a705b5
   OrderedSet: aaeb196f7fef5a9edf55d89760da9176ad40b93c
   shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
   url_launcher_ios: bf5ce03e0e2088bad9cc378ea97fa0ed5b49673b
 
-PODFILE CHECKSUM: 70d9d25280d0dd177a5f637cdb0f0b0b12c6a189
+PODFILE CHECKSUM: 6b9eb94e9f98a329f2ef624b852a6e42d090af2b
 
 COCOAPODS: 1.11.3

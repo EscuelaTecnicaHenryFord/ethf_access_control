@@ -22,6 +22,7 @@ class Mobile extends StatefulWidget {
     required this.barcodeReader,
     required this.cameras,
     required this.onCameraSelected,
+    required this.selectedCameraIndex,
   });
 
   final Future<void> Function(PersonInfo person) onPersonRead;
@@ -30,6 +31,7 @@ class Mobile extends StatefulWidget {
   final FlutterBarcodeSdk barcodeReader;
   final List<CameraDescription> cameras;
   final void Function(int index) onCameraSelected;
+  final int selectedCameraIndex;
 
   @override
   MobileState createState() => MobileState();
@@ -155,13 +157,6 @@ class MobileState extends State<Mobile> {
   void dispose() {
     timer?.cancel();
     timer = null;
-    cameraControllers.forEach((key, value) async {
-      await value.dispose();
-    });
-
-    // reset map
-    cameraControllers = {};
-
     super.dispose();
   }
 
@@ -198,8 +193,6 @@ class MobileState extends State<Mobile> {
       children: [
         getCameraWidget(),
         const Overlay(),
-        if (cameras!.length > 1)
-          SelectCameraDropDown(cameras: widget.cameras, onCameraSelected: widget.onCameraSelected, cameraIndex: 0),
         if (Platform.isWindows)
           Positioned(
             bottom: 0,
@@ -237,8 +230,6 @@ class Scanner extends StatefulWidget {
   State<Scanner> createState() => _ScannerState();
 }
 
-Map<int, CameraController> cameraControllers = {};
-
 class _ScannerState extends State<Scanner> {
   FlutterBarcodeSdk? barcodeReader;
   List<CameraDescription>? cameras;
@@ -249,33 +240,70 @@ class _ScannerState extends State<Scanner> {
   @override
   void initState() {
     super.initState();
-    init();
+    init(0);
   }
 
-  Future<void> init() async {
+  @override
+  void dispose() {
+    super.dispose();
+    cameraController?.dispose();
+  }
+
+  Future<void> init(int index) async {
     final barcodeReader = await globalInitBarcodeSDK();
     final cameras = await globalAvailableCameras();
 
-    final cam = cameras.length > cameraIndex ? cameras[cameraIndex] : null;
-    if (cam != null) {
-      final cc = cameraControllers[cameraIndex] ?? CameraController(cam, ResolutionPreset.max);
-
-      if (!cc.value.isInitialized) {
-        await cc.initialize();
-      }
-
-      cameraControllers[cameraIndex] = cc;
-
+    if (cameraController != null && cameraController!.value.isInitialized) {
+      await cameraController!.dispose();
       setState(() {
-        cameraController = cc;
-        this.barcodeReader = barcodeReader;
-        this.cameras = cameras;
+        cameraController = null;
+      });
+    }
+
+    final cam = cameras.length > index ? cameras[index] : null;
+
+    if (cam != null) {
+      try {
+        final cc = CameraController(cam, ResolutionPreset.max, enableAudio: false);
+
+        if (!cc.value.isInitialized) {
+          await cc.initialize();
+        }
+
+        setState(() {
+          cameraIndex = index;
+          cameraController = cc;
+          this.barcodeReader = barcodeReader;
+          this.cameras = cameras;
+        });
+      } catch (e) {
+        setState(() {
+          cameraIndex = index;
+          cameraController = null;
+          this.barcodeReader = barcodeReader;
+          this.cameras = cameras;
+        });
+      }
+    } else {
+      setState(() {
+        cameraIndex = 0;
       });
     }
   }
 
   @override
   Widget build(Object context) {
+    Widget? cameraSwitcher;
+    if (cameras != null && cameras!.length > 1) {
+      cameraSwitcher = SelectCameraDropDown(
+        cameras: cameras!,
+        onCameraSelected: (index) {
+          init(index);
+        },
+        cameraIndex: cameraIndex,
+      );
+    }
+
     if (barcodeReader != null && cameraController != null) {
       return Stack(
         children: [
@@ -285,32 +313,29 @@ class _ScannerState extends State<Scanner> {
             cameraController: cameraController!,
             barcodeReader: barcodeReader!,
             cameras: cameras!,
-            onCameraSelected: (index) {
-              setState(() {
-                cameraIndex = index;
-                cameraController = null;
-                barcodeReader = null;
-                cameras = null;
-              });
-              init();
-            },
+            selectedCameraIndex: cameraIndex,
+            onCameraSelected: (index) {},
           ),
+          if (cameraSwitcher != null) cameraSwitcher,
         ],
       );
     }
 
-    return const Stack(
+    print(cameraSwitcher);
+
+    return Stack(
       children: [
-        Center(
+        const Center(
           child: SizedBox(
             width: 80,
             height: 80,
             child: CircularProgressIndicator(),
           ),
         ),
-        Center(
+        const Center(
           child: Icon(Icons.qr_code_scanner_rounded),
         ),
+        if (cameraSwitcher != null) cameraSwitcher,
       ],
     );
   }
@@ -330,17 +355,15 @@ class SelectCameraDropDown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<int>(
-      value: cameraIndex,
-      onChanged: (index) {
-        onCameraSelected(index!);
-      },
-      items: cameras.map((e) {
-        return DropdownMenuItem<int>(
-          value: cameras.indexOf(e),
-          child: Text(e.name),
-        );
-      }).toList(),
+    return SizedBox(
+      child: IconButton(
+        onPressed: () {
+          var i = (cameraIndex + 1) % cameras.length;
+
+          onCameraSelected(i);
+        },
+        icon: const Icon(Icons.cameraswitch_rounded),
+      ),
     );
   }
 }
