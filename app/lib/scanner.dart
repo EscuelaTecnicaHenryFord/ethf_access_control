@@ -155,6 +155,13 @@ class MobileState extends State<Mobile> {
   void dispose() {
     timer?.cancel();
     timer = null;
+    cameraControllers.forEach((key, value) async {
+      await value.dispose();
+    });
+
+    // reset map
+    cameraControllers = {};
+
     super.dispose();
   }
 
@@ -192,7 +199,7 @@ class MobileState extends State<Mobile> {
         getCameraWidget(),
         const Overlay(),
         if (cameras!.length > 1)
-          SelectCameraDropDown(cameras: widget.cameras, onCameraSelected: (v) {}, cameraIndex: 0),
+          SelectCameraDropDown(cameras: widget.cameras, onCameraSelected: widget.onCameraSelected, cameraIndex: 0),
         if (Platform.isWindows)
           Positioned(
             bottom: 0,
@@ -230,11 +237,12 @@ class Scanner extends StatefulWidget {
   State<Scanner> createState() => _ScannerState();
 }
 
-class _ScannerState extends State<Scanner> {
-  CameraController? cameraController;
+Map<int, CameraController> cameraControllers = {};
 
+class _ScannerState extends State<Scanner> {
   FlutterBarcodeSdk? barcodeReader;
   List<CameraDescription>? cameras;
+  CameraController? cameraController;
 
   int cameraIndex = 0;
 
@@ -250,11 +258,13 @@ class _ScannerState extends State<Scanner> {
 
     final cam = cameras.length > cameraIndex ? cameras[cameraIndex] : null;
     if (cam != null) {
-      final cc = CameraController(cam, ResolutionPreset.max);
+      final cc = cameraControllers[cameraIndex] ?? CameraController(cam, ResolutionPreset.max);
 
       if (!cc.value.isInitialized) {
         await cc.initialize();
       }
+
+      cameraControllers[cameraIndex] = cc;
 
       setState(() {
         cameraController = cc;
