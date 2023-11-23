@@ -109,9 +109,6 @@ class MobileState extends State<Mobile> {
           print(e);
         }
       } finally {
-        if (!Platform.isWindows) {
-          await startVideo();
-        }
         allowNextScanMS = DateTime.now().millisecondsSinceEpoch + 200;
       }
     } else {
@@ -142,6 +139,14 @@ class MobileState extends State<Mobile> {
         onAvailableImage(availableImage);
       }
     });
+  }
+
+  Future<void> stopVideo() async {
+    if (!imageStreamStarted) return;
+    setState(() {
+      imageStreamStarted = false;
+    });
+    await widget.cameraController.stopImageStream();
   }
 
   void onAvailableImage(CameraImage availableImage) async {
@@ -204,24 +209,38 @@ class MobileState extends State<Mobile> {
       children: [
         getCameraWidget(),
         const Overlay(),
-        if (Platform.isWindows)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 80,
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  pictureScan();
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15),
-                  child: Text("Escanear"),
-                ),
+        // if (Platform.isWindows)
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 80,
+          child: Center(
+            child: ElevatedButton(
+              onPressed: () {
+                pictureScan();
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                child: Text("Escanear"),
               ),
             ),
-          )
+          ),
+        ),
+
+        Positioned(
+          right: 0,
+          child: Switch(
+            value: imageStreamStarted,
+            onChanged: (value) {
+              if (value) {
+                startVideo();
+              } else {
+                stopVideo();
+              }
+            },
+          ),
+        )
       ],
     );
   }
@@ -277,7 +296,7 @@ class _ScannerState extends State<Scanner> {
 
     if (cam != null) {
       try {
-        final cc = CameraController(cam, ResolutionPreset.max, enableAudio: false);
+        final cc = CameraController(cam, ResolutionPreset.medium, enableAudio: false);
 
         if (!cc.value.isInitialized) {
           await cc.initialize();

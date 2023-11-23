@@ -37,25 +37,47 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
   }
 
   void fetchData() async {
-    remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.dni);
+    if (providerKey.currentState != null) {
+      remotePerson =
+          await providerKey.currentState!.getIdentityByDni(int.parse(widget.personInfo.dni.replaceAll('.', '')));
+    } else {
+      remotePerson = await AppApi.instance.fetchIdentity(widget.personInfo.dni);
+    }
 
     if (kDebugMode) {
       print("Found: $remotePerson");
     }
 
-    final events = await AppApi.instance.fetchEvents();
-    this.events = events;
+    if (providerKey.currentState != null) {
+      events = await providerKey.currentState!.getEvents();
+    } else {
+      events = await AppApi.instance.fetchEvents();
+    }
 
-    if (remotePerson?.type == PersonType.guest && currentEvents.isNotEmpty) {
-      final r2 = await AppApi.instance.fetchGuestIdentity(widget.personInfo.dni, currentEvents.first.id);
-      if (r2 != null) {
-        remotePerson = r2;
+    // if (remotePerson?.type == PersonType.guest && currentEvents.isNotEmpty) {
+    //   late final RemotePerson? r2;
+
+    //   if (providerKey.currentState != null) {
+    //     r2 = await providerKey.currentState!.getIdentityByDni(remotePerson!.invitedBy!);
+    //   } else {
+    //     events = await AppApi.instance.fetchEvents();
+    //   }
+
+    //   if (r2 != null) {
+    //     remotePerson = r2;
+    //   }
+    // }
+
+    RemotePerson? invitedBy;
+
+    if (remotePerson != null && remotePerson!.invitedBy != null) {
+      if (providerKey.currentState != null) {
+        invitedBy = await providerKey.currentState!.getIdentityId(remotePerson!.invitedBy!);
+      } else {
+        invitedBy = await AppApi.instance.fetchIdentity(remotePerson!.invitedBy!);
       }
     }
 
-    final invitedBy = (remotePerson != null && remotePerson!.invitedBy != null)
-        ? await AppApi.instance.fetchIdentity(remotePerson!.invitedBy!)
-        : null;
     this.invitedBy = invitedBy;
 
     if (!context.mounted) return;
@@ -98,6 +120,8 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     if (remotePerson == null) return false;
 
     if (remotePerson!.type != PersonType.guest) return true;
+
+    return true;
 
     final currentEvents = events.where((e) => e.isCurrent).toList();
 

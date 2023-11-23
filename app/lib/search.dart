@@ -10,8 +10,13 @@ import 'package:flutter/material.dart';
 
 Future<List<RemotePerson>> getIdentities() async {
   final provider = providerKey.currentState;
-  if (provider == null || !provider.dataLoaded) {
+
+  if (provider == null) {
     return await AppApi.instance.fetchIdentities();
+  }
+
+  if (!provider.dataLoaded) {
+    await provider.updateData();
   }
 
   return provider.identities;
