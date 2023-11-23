@@ -2,9 +2,11 @@ import 'package:ethf_access_control_app/add_guest_screen.dart';
 import 'package:ethf_access_control_app/api/api.dart';
 import 'package:ethf_access_control_app/api/remote_person.dart';
 import 'package:ethf_access_control_app/data_provider_widget.dart';
+import 'package:ethf_access_control_app/main.dart';
 import 'package:ethf_access_control_app/person_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PersonInfoCard extends StatefulWidget {
   const PersonInfoCard({
@@ -93,12 +95,13 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     if (actionLoading || loading) return;
     actionLoading = true;
     try {
+      Navigator.of(context).pop();
       await AppApi.instance.postHistory(widget.personInfo.dni, widget.personInfo.toJSON());
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registro de ingreso exitoso")));
-        providerKey.currentState?.updateHistory();
-        Navigator.of(context).pop();
+      if (scannerViewKey.currentContext?.mounted == true) {
+        ScaffoldMessenger.of(scannerViewKey.currentContext!)
+            .showSnackBar(const SnackBar(content: Text("Registro de ingreso exitoso")));
       }
+      providerKey.currentState?.updateHistory();
     } catch (e) {
       if (kDebugMode) print(e);
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -175,6 +178,8 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
     }
   }
 
+  final focusNode = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -192,101 +197,122 @@ class _PersonInfoCardState extends State<PersonInfoCard> {
       notInvitedLabel = "La persona no está invitada al evento de la fecha";
     }
 
-    return SizedBox(
-      height: 270,
-      width: double.infinity,
-      child: Stack(
-        children: [
-          Container(
-            color: color(),
-            child: ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 20, right: 20),
-                  child: Text(
-                    widget.personInfo.displayName,
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                ),
-                if (invitedBy != null && isGuest && isInvitedToCurrentEvent())
+    return Focus(
+      autofocus: true,
+      focusNode: focusNode,
+      onKey: (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.enter) {
+          if (!loading && remotePerson != null && !isAlreadyIn) {
+            handleRegisterAttendance();
+          } else if (!loading && remotePerson != null && isAlreadyIn) {
+            Navigator.of(context).pop();
+          } else if (!loading && !isInvitedToCurrentEvent()) {
+            handleRegisterNewPerson();
+          }
+          return KeyEventResult.handled;
+        }
+
+        return KeyEventResult.ignored;
+      },
+      child: SizedBox(
+        height: 270,
+        width: double.infinity,
+        child: Stack(
+          children: [
+            Container(
+              color: color(),
+              child: ListView(
+                children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.only(left: 20, top: 20, right: 20),
                     child: Text(
-                      "Invitado por ${invitedBy!.name} (${invitedBy!.id} - ${invitedBy!.typeName})",
-                      style: theme.textTheme.bodyMedium,
+                      widget.personInfo.displayName,
+                      style: theme.textTheme.headlineSmall,
                     ),
                   ),
-                if (invitedBy == null && isGuest && isInvitedToCurrentEvent())
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Invitado por ${remotePerson!.invitedBy ?? 'desconocido'}.",
-                      style: theme.textTheme.bodyMedium,
+                  if (invitedBy != null && isGuest && isInvitedToCurrentEvent())
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "Invitado por ${invitedBy!.name} (${invitedBy!.id} - ${invitedBy!.typeName})",
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ),
-                  ),
-                if (remotePerson != null && !isGuest)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Persona registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
-                      style: theme.textTheme.bodyMedium,
+                  if (invitedBy == null && isGuest && isInvitedToCurrentEvent())
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "Invitado por ${remotePerson!.invitedBy ?? 'desconocido'}.",
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ),
-                  ),
-                if (!loading && isGuest && !isInvitedToCurrentEvent())
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      notInvitedLabel,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+                  if (remotePerson != null && !isGuest)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "Persona registrada como ${remotePerson!.name} (${remotePerson!.id} - ${remotePerson!.typeName})",
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ),
-                  ),
-                if (!loading && !isInvitedToCurrentEvent() && remotePerson != null && remotePerson!.events.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20, top: 10),
-                    child: Text(
-                      "Invitado a otros eventos:",
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+                  if (!loading && isGuest && !isInvitedToCurrentEvent())
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        notInvitedLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+                      ),
                     ),
-                  ),
-                if (!loading && isGuest && remotePerson != null) eventRow()
-              ],
+                  if (!loading && !isInvitedToCurrentEvent() && remotePerson != null && remotePerson!.events.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 10),
+                      child: Text(
+                        "Invitado a otros eventos:",
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+                      ),
+                    ),
+                  if (!loading && isGuest && remotePerson != null) eventRow()
+                ],
+              ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: NavigationBar(
-              onDestinationSelected: (index) {
-                if (index == 0) {
-                  Navigator.of(context).pop();
-                } else if (index == 1 && !loading && remotePerson != null && !isAlreadyIn) {
-                  handleRegisterAttendance();
-                } else if (index == 1 && !loading && remotePerson != null && isAlreadyIn) {
-                  Navigator.of(context).pop();
-                } else if (index == 1 && !loading && !isInvitedToCurrentEvent()) {
-                  handleRegisterNewPerson();
-                }
-              },
-              selectedIndex: 1,
-              destinations: [
-                const NavigationDestination(icon: Icon(Icons.cancel), label: 'Cancelar'),
-                if (loading)
-                  const NavigationDestination(
-                    icon: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
-                    label: 'Registrar ingreso',
-                  ),
-                if (!loading && isInvitedToCurrentEvent() && !isAlreadyIn)
-                  const NavigationDestination(icon: Icon(Icons.done), label: 'Registrar ingreso'),
-                if (!loading && isInvitedToCurrentEvent() && isAlreadyIn)
-                  const NavigationDestination(icon: Icon(Icons.close), label: 'Ya ingresado'),
-                if (!loading && !isInvitedToCurrentEvent())
-                  NavigationDestination(icon: const Icon(Icons.person_add), label: inviteLabel),
-              ],
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: NavigationBar(
+                onDestinationSelected: (index) {
+                  if (index == 0) {
+                    Navigator.of(context).pop();
+                  } else if (index == 1 && !loading && remotePerson != null && !isAlreadyIn) {
+                    handleRegisterAttendance();
+                  } else if (index == 1 && !loading && remotePerson != null && isAlreadyIn) {
+                    Navigator.of(context).pop();
+                  } else if (index == 1 && !loading && !isInvitedToCurrentEvent()) {
+                    handleRegisterNewPerson();
+                  }
+                },
+                selectedIndex: 1,
+                destinations: [
+                  const NavigationDestination(icon: Icon(Icons.cancel), label: 'Cancelar'),
+                  if (loading)
+                    const NavigationDestination(
+                      icon: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
+                      label: 'Registrar ingreso',
+                    ),
+                  if (!loading && isInvitedToCurrentEvent() && !isAlreadyIn)
+                    const NavigationDestination(
+                      icon: Icon(Icons.done),
+                      label: 'Registrar ingreso',
+                    ),
+                  if (!loading && isInvitedToCurrentEvent() && isAlreadyIn)
+                    const NavigationDestination(icon: Icon(Icons.close), label: 'Ya ingresado'),
+                  if (!loading && !isInvitedToCurrentEvent())
+                    NavigationDestination(icon: const Icon(Icons.person_add), label: inviteLabel),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

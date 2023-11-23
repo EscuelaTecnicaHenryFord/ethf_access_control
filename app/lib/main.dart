@@ -17,6 +17,8 @@ void main() {
   runApp(const MyApp());
 }
 
+final scannerViewKey = GlobalKey();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -135,10 +137,12 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           NavigationDestination(icon: Icon(Icons.history), label: "Historial"),
         ],
       ),
-      body: TabBarView(controller: controller, children: const [
-        HomeScreen(),
-        ScannerView(),
-        HistoryScreen(),
+      body: TabBarView(controller: controller, children: [
+        const HomeScreen(),
+        ScannerView(
+          key: scannerViewKey,
+        ),
+        const HistoryScreen(),
       ]),
       floatingActionButton: controller.index == 0
           ? FloatingActionButton.extended(
