@@ -65,9 +65,15 @@ class MobileState extends State<Mobile> {
   }
 
   void pictureScan() async {
+    if (!widget.cameraController.value.isInitialized) return;
+    if (widget.cameraController.value.isTakingPicture) return;
+
     final image = await widget.cameraController.takePicture();
     List<BarcodeResult> results = await widget.barcodeReader.decodeFile(image.path);
+
     onResults(results);
+
+    await File(image.path).delete();
   }
 
   Future<void> onResults(List<BarcodeResult> results) async {
@@ -251,7 +257,9 @@ class _ScannerState extends State<Scanner> {
   @override
   void dispose() {
     super.dispose();
-    cameraController?.dispose();
+    if (cameraController?.value != null && cameraController!.value.isInitialized) {
+      cameraController?.dispose();
+    }
   }
 
   Future<void> init(int index) async {
