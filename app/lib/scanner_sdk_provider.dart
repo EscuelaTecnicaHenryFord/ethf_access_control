@@ -7,7 +7,7 @@ Future<FlutterBarcodeSdk> initBarcodeSDK() async {
   final barcodeReader = FlutterBarcodeSdk();
   // Get 30-day FREEE trial license from https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
   await barcodeReader.setLicense(
-      'DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==');
+      'DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAyNDAzMjAzLVRYbE5iMkpwYkdWUWNtOXFYMlJpY2ciLCJtYWluU2VydmVyVVJMIjoiaHR0cHM6Ly9tZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJvcmdhbml6YXRpb25JRCI6IjEwMjQwMzIwMyIsInN0YW5kYnlTZXJ2ZXJVUkwiOiJodHRwczovL3NkbHMuZHluYW1zb2Z0b25saW5lLmNvbSIsImNoZWNrQ29kZSI6Mzg3NTM2NzEzfQ==');
   await barcodeReader.init();
   await barcodeReader.setBarcodeFormats(BarcodeFormat.PDF417);
   // Get all current parameters.
